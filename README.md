@@ -100,3 +100,150 @@ It enables structured mentorship, resource sharing, and real-time collaboration 
 ---
 
 ## 📁 Project Structure
+
+```bash
+src/
+├── components/
+│   ├── ui/              # Reusable UI components
+│   ├── navigation/      # Navbar & sidebar
+│   ├── dashboard/       # Dashboard-specific components
+│   └── sections/        # Page sections
+├── pages/               # Route pages
+├── layouts/             # Public & Dashboard layouts
+├── hooks/               # Custom hooks (useToast, useFormValidation)
+├── services/            # API clients and services
+└── utils/               # Helpers, constants, mock data
+```
+
+---
+
+## 🚀 Available Scripts
+
+```bash
+npm run dev      # Start development server
+npm run build    # Build for production
+npm run preview  # Preview production build
+npm run lint     # Run ESLint
+```
+
+---
+
+## 🎯 Design System
+
+### 🎨 Color Palette
+
+| Role          | Color      | Hex     |
+| ------------- | ---------- | ------- |
+| Primary       | Navy       | #24204D |
+| Primary Light | Indigo     | #3A3570 |
+| Primary Dark  | Deep Navy  | #1A1738 |
+| Accent        | Red        | #EB2D2E |
+| Neutral       | Gray       | #737A7F |
+| Background    | Light Gray | #F5F6F7 |
+
+---
+
+### 🔤 Typography
+
+- **Font Family:** Inter, Poppins
+- **H1:** 32px Bold
+- **H2:** 24px Bold
+- **H3:** 20px Semibold
+- **Body:** 16px Regular
+- **Small:** 14px Regular
+
+---
+
+### 📐 Layout System
+
+- **Grid:** 12-column responsive
+- **Spacing:** 8px system (8, 16, 24, 32...)
+- **Border Radius:** 12px
+- **Max Width:** 1200px
+
+---
+
+## 🎭 Professional UX Enhancements
+
+- Smooth hover & active states
+- Accessible focus rings (WCAG compliant)
+- Animated testimonials carousel
+- Modal confirmations for critical actions
+- Toast notifications (success / error)
+- Skeleton loading states
+- Empty state UI
+- Responsive layouts
+- Dark theme for video calls
+- Scroll-to-top button
+- Professional team showcase
+
+---
+
+## 📱 Responsive Design
+
+- Mobile-first approach
+- Tablet optimized (`sm: 640px`)
+- Desktop layouts (`lg: 1024px`)
+- Touch-friendly UI
+- Collapsible navigation
+
+---
+
+## 🔐 Security & Moderation
+
+- Role-based access control (RBAC)
+- Admin approval for all new accounts
+- Reporting & moderation system
+- Secure session handling
+- Protected routes
+
+---
+
+## 📝 Developer Notes
+
+- Built using Tailwind CSS utility classes
+- `useToast()` hook for notifications
+- `useFormValidation` for form handling
+- Replace mock data from `utils/mockData.js` with real APIs
+- API client setup in `services/apiClient.js`
+- Use `cn()` utility for className merging
+
+---
+
+## 🔗 API Integration
+
+Update API base URL:
+
+```js
+// src/services/apiClient.js
+const apiClient = axios.create({
+  baseURL: "https://your-api-endpoint.com",
+});
+```
+
+Example usage:
+
+```js
+apiClient.get();
+apiClient.post();
+apiClient.put();
+apiClient.delete();
+```
+
+---
+
+## 🎯 Final Vision
+
+MetroBridge aims to deliver a **clean, scalable, and professional academic platform UI** that combines:
+
+- Structured learning (like Google Classroom)
+- Real-time mentorship (like Zoom)
+- Professional networking (like LinkedIn)
+
+All tailored specifically for **Metropolitan University students**.
+
+---
+
+## 📌 License
+
+This project is for academic purposes under the MERN Stack course.
