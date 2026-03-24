@@ -1,0 +1,151 @@
+import { Link } from "react-router-dom";
+import ReviewCarousel from "../components/ui/ReviewCarousel";
+import Button from "../components/ui/Button";
+import Card from "../components/ui/Card";
+import FeaturesSection from "../components/sections/FeaturesSection";
+import AboutSection from "../components/sections/AboutSection";
+import { reviews } from "../utils/mockData";
+
+const steps = [
+  {
+    title: "Create approved account",
+    text: "Sign up with your university information and wait for admin approval.",
+  },
+  {
+    title: "Find the right mentor",
+    text: "Search mentors by department, course expertise, and availability.",
+  },
+  {
+    title: "Collaborate and grow",
+    text: "Book sessions, join video calls, and access learning resources.",
+  },
+];
+
+export default function LandingPage() {
+  return (
+    <div>
+      <section className="bg-gradient-to-r from-primary to-primary-light py-16 text-white sm:py-24">
+        <div className="content-container grid items-center gap-8 lg:grid-cols-2">
+          <div>
+            <p className="text-small uppercase tracking-widest text-red-100">
+              Metropolitan University, Sylhet
+            </p>
+            <h1 className="mt-4 text-h1 text-white">
+              Connect, Learn, Grow Together
+            </h1>
+            <p className="mt-4 max-w-xl text-body text-slate-100">
+              MetroBridge is a secure mentorship and academic collaboration
+              platform for freshers, seniors, alumni, and university moderators.
+            </p>
+            <div className="mt-8 flex flex-wrap gap-3">
+              <Link to="/signup">
+                <Button size="lg" variant="cta">
+                  Get Started
+                </Button>
+              </Link>
+              <Link to="/login">
+                <Button size="lg" variant="secondary">
+                  Sign In
+                </Button>
+              </Link>
+            </div>
+          </div>
+          <Card className="bg-white/10 p-6 text-white backdrop-blur">
+            <h3 className="text-h3 text-white">How it works</h3>
+            <div className="mt-5 space-y-4">
+              {steps.map((step, index) => (
+                <div
+                  key={step.title}
+                  className="rounded-card border border-white/20 bg-white/10 p-4">
+                  <p className="text-small font-semibold text-red-100">
+                    Step {index + 1}
+                  </p>
+                  <p className="mt-1 text-body font-semibold text-white">
+                    {step.title}
+                  </p>
+                  <p className="mt-1 text-small text-slate-100">{step.text}</p>
+                </div>
+              ))}
+            </div>
+          </Card>
+        </div>
+      </section>
+
+      <section className="content-container py-14" id="features">
+        <FeaturesSection />
+      </section>
+
+      <section className="content-container pb-16" id="benefits">
+        <Card>
+          <h2>Benefits for students</h2>
+          <p className="mt-3">
+            MetroBridge helps students access trusted mentors, structured
+            learning support, and direct career guidance from alumni in one
+            professional platform.
+          </p>
+        </Card>
+      </section>
+
+      <AboutSection />
+
+      <section className="bg-slate-50 py-14" id="reviews">
+        <div className="content-container">
+          <h2 className="text-center">What students and mentors say</h2>
+          <p className="mt-2 text-center text-neutral">
+            Join 1,000+ students and mentors transforming academic collaboration
+          </p>
+          <div className="mt-10">
+            <ReviewCarousel reviews={reviews} />
+          </div>
+        </div>
+      </section>
+
+      <section className="border-t border-border bg-white py-14">
+        <div className="content-container">
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            <Card className="card-hover text-center p-6">
+              <h3 className="text-h2 text-primary">1,240+</h3>
+              <p className="mt-2 text-small text-neutral">Active Students</p>
+            </Card>
+            <Card className="card-hover text-center p-6">
+              <h3 className="text-h2 text-primary">380+</h3>
+              <p className="mt-2 text-small text-neutral">Mentors & Advisors</p>
+            </Card>
+            <Card className="card-hover text-center p-6">
+              <h3 className="text-h2 text-primary">8,500+</h3>
+              <p className="mt-2 text-small text-neutral">Sessions Completed</p>
+            </Card>
+            <Card className="card-hover text-center p-6">
+              <h3 className="text-h2 text-accent">4.8/5</h3>
+              <p className="mt-2 text-small text-neutral">Average Rating</p>
+            </Card>
+          </div>
+        </div>
+      </section>
+
+      <section className="bg-gradient-to-r from-primary to-primary-light py-12 text-white">
+        <div className="content-container text-center">
+          <h2 className="text-white">
+            Ready to transform your academic journey?
+          </h2>
+          <p className="mt-3 max-w-2xl text-body text-slate-100">
+            Join MetroBridge today and connect with experienced mentors from
+            Metropolitan University.
+          </p>
+          <div className="mt-6 flex flex-wrap justify-center gap-3">
+            <Link to="/signup">
+              <Button size="lg" variant="cta">
+                Create Free Account
+              </Button>
+            </Link>
+            <Link to="/contact">
+              <Button size="lg" variant="secondary">
+                Get in Touch
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </section>
+    </div>
+  );
+}
