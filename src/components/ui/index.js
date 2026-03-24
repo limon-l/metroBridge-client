@@ -10,3 +10,4 @@ export { default as EmptyState } from "./EmptyState";
 export { default as ReviewCarousel } from "./ReviewCarousel";
 export { default as FeatureShowcase } from "./FeatureShowcase";
 export { default as ScrollToTopButton } from "./ScrollToTopButton";
+export { default as MotionReveal } from "./MotionReveal";

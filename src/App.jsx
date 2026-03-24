@@ -3,6 +3,7 @@ import { ToastProvider } from "./components/ui/Toast";
 import DashboardLayout from "./layouts/DashboardLayout";
 import PublicLayout from "./layouts/PublicLayout";
 import AdminDashboardPage from "./pages/AdminDashboardPage";
+import AdminLoginPage from "./pages/AdminLoginPage";
 import BookingPage from "./pages/BookingPage";
 import ContactPage from "./pages/ContactPage";
 import CourseDetailPage from "./pages/CourseDetailPage";
@@ -25,6 +26,7 @@ function App() {
         <Route element={<PublicLayout />}>
           <Route index element={<LandingPage />} />
           <Route path="login" element={<LoginPage />} />
+          <Route path="admin-login" element={<AdminLoginPage />} />
           <Route path="signup" element={<SignupPage />} />
           <Route path="contact" element={<ContactPage />} />
         </Route>

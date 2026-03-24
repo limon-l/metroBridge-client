@@ -70,12 +70,37 @@ html {
         @apply transition duration-200 hover:-translate-y-1 hover:shadow-soft;
     }
 
+    .card-hover-strong {
+        @apply transition-all duration-300 hover:-translate-y-1.5 hover:shadow-soft;
+    }
+
     .fade-in {
         @apply animate-fade-in;
     }
 
     .scale-up {
         @apply animate-scale-up;
+    }
+
+    .shine {
+        position: relative;
+        overflow: hidden;
+    }
+
+    .shine::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -130%;
+        width: 60%;
+        height: 100%;
+        transform: skewX(-18deg);
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.32), transparent);
+        transition: left 600ms ease;
+    }
+
+    .shine:hover::after {
+        left: 140%;
     }
 }
 
@@ -98,5 +123,17 @@ html {
     to {
         opacity: 1;
         transform: scale(1);
+    }
+}
+
+@keyframes float-soft {
+
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(-6px);
     }
 }

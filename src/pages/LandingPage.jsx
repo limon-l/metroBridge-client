@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import ReviewCarousel from "../components/ui/ReviewCarousel";
 import Button from "../components/ui/Button";
 import Card from "../components/ui/Card";
+import MotionReveal from "../components/ui/MotionReveal";
 import FeaturesSection from "../components/sections/FeaturesSection";
 import AboutSection from "../components/sections/AboutSection";
 import { reviews } from "../utils/mockData";
@@ -24,9 +25,11 @@ const steps = [
 export default function LandingPage() {
   return (
     <div>
-      <section className="bg-gradient-to-r from-primary to-primary-light py-16 text-white sm:py-24">
+      <section
+        className="bg-gradient-to-r from-primary to-primary-light py-16 text-white sm:py-24"
+        id="how">
         <div className="content-container grid items-center gap-8 lg:grid-cols-2">
-          <div>
+          <MotionReveal className="shine" y={18}>
             <p className="text-small uppercase tracking-widest text-red-100">
               Metropolitan University, Sylhet
             </p>
@@ -49,76 +52,99 @@ export default function LandingPage() {
                 </Button>
               </Link>
             </div>
-          </div>
-          <Card className="bg-white/10 p-6 text-white backdrop-blur">
-            <h3 className="text-h3 text-white">How it works</h3>
-            <div className="mt-5 space-y-4">
-              {steps.map((step, index) => (
-                <div
-                  key={step.title}
-                  className="rounded-card border border-white/20 bg-white/10 p-4">
-                  <p className="text-small font-semibold text-red-100">
-                    Step {index + 1}
-                  </p>
-                  <p className="mt-1 text-body font-semibold text-white">
-                    {step.title}
-                  </p>
-                  <p className="mt-1 text-small text-slate-100">{step.text}</p>
-                </div>
-              ))}
-            </div>
-          </Card>
+          </MotionReveal>
+          <MotionReveal delay={120} y={18}>
+            <Card className="bg-white/10 p-6 text-white backdrop-blur">
+              <h3 className="text-h3 text-white">How it works</h3>
+              <div className="mt-5 space-y-4">
+                {steps.map((step, index) => (
+                  <div
+                    key={step.title}
+                    className="rounded-card border border-white/20 bg-white/10 p-4 transition-all duration-300 hover:translate-x-1 hover:bg-white/15">
+                    <p className="text-small font-semibold text-red-100">
+                      Step {index + 1}
+                    </p>
+                    <p className="mt-1 text-body font-semibold text-white">
+                      {step.title}
+                    </p>
+                    <p className="mt-1 text-small text-slate-100">
+                      {step.text}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </Card>
+          </MotionReveal>
         </div>
       </section>
 
       <section className="content-container py-14" id="features">
-        <FeaturesSection />
+        <MotionReveal y={20}>
+          <FeaturesSection />
+        </MotionReveal>
       </section>
 
       <section className="content-container pb-16" id="benefits">
-        <Card>
-          <h2>Benefits for students</h2>
-          <p className="mt-3">
-            MetroBridge helps students access trusted mentors, structured
-            learning support, and direct career guidance from alumni in one
-            professional platform.
-          </p>
-        </Card>
+        <MotionReveal y={18}>
+          <Card className="card-hover-strong">
+            <h2>Benefits for students</h2>
+            <p className="mt-3">
+              MetroBridge helps students access trusted mentors, structured
+              learning support, and direct career guidance from alumni in one
+              professional platform.
+            </p>
+          </Card>
+        </MotionReveal>
       </section>
 
       <AboutSection />
 
       <section className="bg-slate-50 py-14" id="reviews">
         <div className="content-container">
-          <h2 className="text-center">What students and mentors say</h2>
-          <p className="mt-2 text-center text-neutral">
-            Join 1,000+ students and mentors transforming academic collaboration
-          </p>
-          <div className="mt-10">
-            <ReviewCarousel reviews={reviews} />
-          </div>
+          <MotionReveal y={18}>
+            <h2 className="text-center">What students and mentors say</h2>
+            <p className="mt-2 text-center text-neutral">
+              Join 1,000+ students and mentors transforming academic
+              collaboration
+            </p>
+            <div className="mt-10">
+              <ReviewCarousel reviews={reviews} />
+            </div>
+          </MotionReveal>
         </div>
       </section>
 
       <section className="border-t border-border bg-white py-14">
         <div className="content-container">
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            <Card className="card-hover text-center p-6">
-              <h3 className="text-h2 text-primary">1,240+</h3>
-              <p className="mt-2 text-small text-neutral">Active Students</p>
-            </Card>
-            <Card className="card-hover text-center p-6">
-              <h3 className="text-h2 text-primary">380+</h3>
-              <p className="mt-2 text-small text-neutral">Mentors & Advisors</p>
-            </Card>
-            <Card className="card-hover text-center p-6">
-              <h3 className="text-h2 text-primary">8,500+</h3>
-              <p className="mt-2 text-small text-neutral">Sessions Completed</p>
-            </Card>
-            <Card className="card-hover text-center p-6">
-              <h3 className="text-h2 text-accent">4.8/5</h3>
-              <p className="mt-2 text-small text-neutral">Average Rating</p>
-            </Card>
+            <MotionReveal delay={40}>
+              <Card className="card-hover-strong text-center p-6">
+                <h3 className="text-h2 text-primary">1,240+</h3>
+                <p className="mt-2 text-small text-neutral">Active Students</p>
+              </Card>
+            </MotionReveal>
+            <MotionReveal delay={90}>
+              <Card className="card-hover-strong text-center p-6">
+                <h3 className="text-h2 text-primary">380+</h3>
+                <p className="mt-2 text-small text-neutral">
+                  Mentors & Advisors
+                </p>
+              </Card>
+            </MotionReveal>
+            <MotionReveal delay={140}>
+              <Card className="card-hover-strong text-center p-6">
+                <h3 className="text-h2 text-primary">8,500+</h3>
+                <p className="mt-2 text-small text-neutral">
+                  Sessions Completed
+                </p>
+              </Card>
+            </MotionReveal>
+            <MotionReveal delay={190}>
+              <Card className="card-hover-strong text-center p-6">
+                <h3 className="text-h2 text-accent">4.8/5</h3>
+                <p className="mt-2 text-small text-neutral">Average Rating</p>
+              </Card>
+            </MotionReveal>
           </div>
         </div>
       </section>
