@@ -96,6 +96,7 @@ It enables structured mentorship, resource sharing, and real-time collaboration 
 - **Tailwind CSS** – Utility-first styling
 - **React Router v7** – Client-side routing
 - **Axios** – API communication
+- **Firebase Authentication** – Email/password auth and session persistence
 
 ---
 
@@ -196,6 +197,30 @@ npm run lint     # Run ESLint
 - Reporting & moderation system
 - Secure session handling
 - Protected routes
+
+---
+
+## 🔥 Firebase Auth Setup
+
+1. Create a Firebase project from the Firebase Console.
+2. In **Build → Authentication → Sign-in method**, enable **Email/Password**.
+3. In **Project settings → General → Your apps**, create a Web app and copy config values.
+4. Create a local `.env` file using `.env.example` and fill the Firebase variables.
+5. Set admin and mentor emails:
+
+- `VITE_ADMIN_EMAILS=admin1@domain.com,admin2@domain.com`
+- `VITE_MENTOR_EMAILS=mentor1@domain.com,mentor2@domain.com`
+
+6. Restart dev server after updating `.env`.
+
+### Auth Files
+
+- `src/services/firebase.js` – Firebase initialization
+- `src/context/AuthContext.jsx` – Auth state + login/signup/logout actions
+- `src/components/auth/ProtectedRoute.jsx` – Route guard by role
+- `src/pages/LoginPage.jsx` – Firebase user login
+- `src/pages/SignupPage.jsx` – Firebase account creation
+- `src/pages/AdminLoginPage.jsx` – Firebase admin login
 
 ---
 

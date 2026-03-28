@@ -1,5 +1,7 @@
 import Badge from "../ui/Badge";
 import Button from "../ui/Button";
+import { useAuth } from "../../hooks/useAuth";
+import { useToast } from "../../hooks/useToast";
 
 const roleLabel = {
   student: "Student",
@@ -8,6 +10,18 @@ const roleLabel = {
 };
 
 export default function TopNavbar({ role }) {
+  const { logout } = useAuth();
+  const { showToast } = useToast();
+
+  const onLogout = async () => {
+    try {
+      await logout();
+      showToast("Logged out successfully.");
+    } catch {
+      showToast("Unable to logout right now.", "error");
+    }
+  };
+
   return (
     <header className="sticky top-0 z-20 border-b border-border bg-white/95 backdrop-blur">
       <div className="flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8">
@@ -23,6 +37,9 @@ export default function TopNavbar({ role }) {
           <Badge variant="accent">{roleLabel[role]}</Badge>
           <Button size="sm" variant="secondary">
             Notifications
+          </Button>
+          <Button onClick={onLogout} size="sm" variant="danger">
+            Logout
           </Button>
         </div>
       </div>
