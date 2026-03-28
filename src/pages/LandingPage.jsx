@@ -103,7 +103,7 @@ export default function LandingPage() {
         <div className="content-container">
           <MotionReveal y={18}>
             <h2 className="text-center">What students and mentors say</h2>
-            <p className="mt-2 text-center text-neutral">
+            <p className="section-subtitle">
               Join 1,000+ students and mentors transforming academic
               collaboration
             </p>
@@ -154,7 +154,7 @@ export default function LandingPage() {
           <h2 className="text-white">
             Ready to transform your academic journey?
           </h2>
-          <p className="mt-3 max-w-2xl text-body text-slate-100">
+          <p className="section-subtitle-light">
             Join MetroBridge today and connect with experienced mentors from
             Metropolitan University.
           </p>

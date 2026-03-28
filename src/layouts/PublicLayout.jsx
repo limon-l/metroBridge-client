@@ -1,24 +1,21 @@
-import { Outlet } from "react-router-dom";
+import { Outlet, useLocation } from "react-router-dom";
 import ProfessionalNavbar from "../components/navigation/ProfessionalNavbar";
+import Footer from "../components/sections/Footer";
 import ScrollToTopButton from "../components/ui/ScrollToTopButton";
 
 export default function PublicLayout() {
+  const location = useLocation();
+
   return (
-    <div className="min-h-screen bg-surface">
+    <div className="flex min-h-screen flex-col bg-surface">
       <ProfessionalNavbar />
-      <main>
-        <Outlet />
-      </main>
-      <ScrollToTopButton />
-      <footer className="border-t border-border bg-white py-8">
-        <div className="content-container flex flex-col items-center justify-between gap-2 text-small text-neutral sm:flex-row">
-          <p>
-            © {new Date().getFullYear()} MetroBridge – Metropolitan University,
-            Sylhet
-          </p>
-          <p>Secure mentorship and academic collaboration platform</p>
+      <main className="flex-1">
+        <div key={location.pathname} className="fade-in">
+          <Outlet />
         </div>
-      </footer>
+      </main>
+      <Footer />
+      <ScrollToTopButton />
     </div>
   );
 }

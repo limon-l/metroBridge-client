@@ -13,14 +13,13 @@ const navItems = [
     ],
   },
   {
-    label: "About",
+    label: "Resources",
     submenu: [
-      { label: "Our Team", href: "#team" },
       { label: "Blog", href: "/blog" },
+      { label: "FAQs", href: "/faq" },
       { label: "Contact", href: "/contact" },
     ],
   },
-  { label: "FAQs", href: "/faqs" },
 ];
 
 export default function ProfessionalNavbar() {

@@ -24,7 +24,7 @@ export default function AuthShell({
                 {tag}
               </p>
               <h2 className="mt-4">{title}</h2>
-              <p className="mt-2 text-small text-neutral">{subtitle}</p>
+              <p className="section-subtitle">{subtitle}</p>
               <div className="mt-6">{children}</div>
             </section>
           </MotionReveal>

@@ -6,10 +6,13 @@ import DashboardLayout from "./layouts/DashboardLayout";
 import PublicLayout from "./layouts/PublicLayout";
 import AdminDashboardPage from "./pages/AdminDashboardPage";
 import AdminLoginPage from "./pages/AdminLoginPage";
+import BlogDetailPage from "./pages/BlogDetailPage";
+import BlogPage from "./pages/BlogPage";
 import BookingPage from "./pages/BookingPage";
 import ContactPage from "./pages/ContactPage";
 import CourseDetailPage from "./pages/CourseDetailPage";
 import CourseLibraryPage from "./pages/CourseLibraryPage";
+import FAQPage from "./pages/FAQPage";
 import LandingPage from "./pages/LandingPage";
 import LoginPage from "./pages/LoginPage";
 import MentorDashboardPage from "./pages/MentorDashboardPage";
@@ -32,6 +35,9 @@ function App() {
             <Route path="admin-login" element={<AdminLoginPage />} />
             <Route path="signup" element={<SignupPage />} />
             <Route path="contact" element={<ContactPage />} />
+            <Route path="blog" element={<BlogPage />} />
+            <Route path="blog/:id" element={<BlogDetailPage />} />
+            <Route path="faq" element={<FAQPage />} />
           </Route>
 
           <Route

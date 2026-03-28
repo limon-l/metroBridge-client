@@ -34,7 +34,7 @@ export default function AboutSection() {
       <div className="content-container">
         <MotionReveal className="mb-12 text-center" y={18}>
           <h2>Trusted by Metropolitan University</h2>
-          <p className="mt-3 max-w-2xl text-neutral">
+          <p className="section-subtitle">
             MetroBridge is developed and maintained by a dedicated team of
             educators and technologists committed to student success.
           </p>
@@ -68,7 +68,7 @@ export default function AboutSection() {
         <MotionReveal delay={120}>
           <Card className="card-hover-strong mt-12 bg-gradient-to-r from-primary/5 to-accent/5 p-8">
             <h3 className="text-center text-h3">Our Mission</h3>
-            <p className="mt-4 max-w-3xl text-center text-body">
+            <p className="section-subtitle">
               To create a secure, professional mentorship ecosystem that
               empowers Metropolitan University students to achieve academic
               excellence and career success through meaningful guidance from

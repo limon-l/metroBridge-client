@@ -1,25 +1,33 @@
 import ContactForm from "../components/dashboard/ContactForm";
 import Card from "../components/ui/Card";
 import MotionReveal from "../components/ui/MotionReveal";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faMapLocationDot,
+  faEnvelope,
+  faPhone,
+  faClock,
+  faHeadset,
+} from "@fortawesome/free-solid-svg-icons";
 
 const contactInfo = [
   {
-    icon: "📍",
+    icon: faMapLocationDot,
     title: "Visit us",
     content: "Metropolitan University, Sylhet, Bangladesh",
   },
   {
-    icon: "📧",
+    icon: faEnvelope,
     title: "Email",
     content: "support@metrobridge.edu.bd",
   },
   {
-    icon: "📞",
+    icon: faPhone,
     title: "Phone",
     content: "+880 1XXX-XXX-XXX",
   },
   {
-    icon: "⏰",
+    icon: faClock,
     title: "Office Hours",
     content: "Sun-Thu: 9:00 AM - 5:00 PM (UTC+6)",
   },
@@ -31,7 +39,7 @@ export default function ContactPage() {
       <section className="bg-gradient-to-r from-primary via-primary-light to-primary-dark py-12 text-white sm:py-16">
         <MotionReveal className="content-container text-center" y={16}>
           <h1 className="text-h1 text-white">Contact our team</h1>
-          <p className="mt-2 max-w-2xl text-body text-slate-100">
+          <p className="section-subtitle-light text-body">
             Have questions? Our support team is here to help with your
             mentorship journey at MetroBridge.
           </p>
@@ -49,7 +57,9 @@ export default function ContactPage() {
               <MotionReveal delay={index * 70} key={info.title} y={16}>
                 <Card className="card-hover-strong p-5">
                   <div className="flex items-start gap-4">
-                    <div className="text-3xl">{info.icon}</div>
+                    <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10 text-xl text-primary">
+                      <FontAwesomeIcon icon={info.icon} />
+                    </div>
                     <div>
                       <p className="font-semibold text-primary">{info.title}</p>
                       <p className="mt-1 text-small text-neutral">
@@ -62,12 +72,19 @@ export default function ContactPage() {
             ))}
 
             <MotionReveal delay={280} y={16}>
-              <Card className="card-hover-strong bg-primary p-6 text-white">
-                <h3 className="text-h3 text-white">Quick support</h3>
-                <p className="mt-2 text-small text-slate-100">
-                  For urgent issues, reach out to our support team via email or
-                  visit our office during business hours.
-                </p>
+              <Card className="card-hover-strong p-5">
+                <div className="flex items-start gap-4">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10 text-xl text-primary">
+                    <FontAwesomeIcon icon={faHeadset} />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-primary">Quick support</p>
+                    <p className="mt-1 text-small text-neutral">
+                      For urgent issues, reach out to our support team via email
+                      or visit our office during business hours.
+                    </p>
+                  </div>
+                </div>
               </Card>
             </MotionReveal>
           </div>
