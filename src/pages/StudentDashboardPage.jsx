@@ -3,6 +3,7 @@ import Badge from "../components/ui/Badge";
 import Card from "../components/ui/Card";
 import EmptyState from "../components/ui/EmptyState";
 import Skeleton from "../components/ui/Skeleton";
+import { useAuth } from "../hooks/useAuth";
 
 const sessions = [
   {
@@ -26,13 +27,28 @@ const resources = [
 ];
 
 export default function StudentDashboardPage() {
+  const { user } = useAuth();
+
+  const studentName =
+    user?.displayName ||
+    user?.email?.split("@")[0]?.replace(/[._-]+/g, " ") ||
+    "Student";
+
   return (
     <div className="space-y-6">
-      <Card>
-        <h2>Welcome back, student</h2>
-        <p className="mt-2">
+      <Card className="bg-gradient-to-r from-primary to-primary-light text-white">
+        <p className="text-small font-semibold uppercase tracking-wide text-white/80">
+          Student Dashboard
+        </p>
+        <h2 className="text-white">Welcome back, {studentName}</h2>
+        <p className="mt-2 text-white/90">
           Track your mentorship sessions and continue your academic growth.
         </p>
+        <div className="mt-4 flex flex-wrap gap-2">
+          <Badge variant="success">Active Student</Badge>
+          <Badge>Shift: Day</Badge>
+          <Badge>Section: C</Badge>
+        </div>
       </Card>
 
       <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
