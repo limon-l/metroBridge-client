@@ -1,7 +1,8 @@
+import { useNavigate } from "react-router-dom";
 import MetricCard from "../components/dashboard/MetricCard";
 import Badge from "../components/ui/Badge";
-import Card from "../components/ui/Card";
 import Button from "../components/ui/Button";
+import Card from "../components/ui/Card";
 
 const sessionRequests = [
   {
@@ -13,6 +14,35 @@ const sessionRequests = [
 ];
 
 export default function MentorDashboardPage() {
+  const navigate = useNavigate();
+
+  const quickActions = [
+    {
+      icon: "💬",
+      title: "Community Feed",
+      description: "Share insights with students",
+      onClick: () => navigate("/mentor/feed"),
+    },
+    {
+      icon: "📨",
+      title: "Messages",
+      description: "Chat with students",
+      onClick: () => navigate("/mentor/messages"),
+    },
+    {
+      icon: "📅",
+      title: "Appointments",
+      description: "Manage session requests",
+      onClick: () => navigate("/mentor/appointments"),
+    },
+    {
+      icon: "📚",
+      title: "Documents",
+      description: "Upload materials",
+      onClick: () => navigate("/mentor/documents"),
+    },
+  ];
+
   return (
     <div className="space-y-6">
       <Card>
@@ -21,6 +51,26 @@ export default function MentorDashboardPage() {
           Manage session requests, resources, and performance feedback.
         </p>
       </Card>
+
+      {/* Quick Actions */}
+      <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        {quickActions.map((action) => (
+          <Card
+            key={action.title}
+            className="cursor-pointer hover:shadow-lg transition-shadow">
+            <div className="text-4xl mb-3">{action.icon}</div>
+            <h4 className="font-semibold mb-1">{action.title}</h4>
+            <p className="text-small text-neutral mb-3">{action.description}</p>
+            <Button
+              size="sm"
+              variant="primary"
+              onClick={action.onClick}
+              className="w-full">
+              Go
+            </Button>
+          </Card>
+        ))}
+      </section>
 
       <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <MetricCard title="Session requests" value="09" />

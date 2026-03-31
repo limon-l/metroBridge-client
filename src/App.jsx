@@ -6,17 +6,21 @@ import DashboardLayout from "./layouts/DashboardLayout";
 import PublicLayout from "./layouts/PublicLayout";
 import AdminDashboardPage from "./pages/AdminDashboardPage";
 import AdminLoginPage from "./pages/AdminLoginPage";
+import AppointmentSchedulerPage from "./pages/AppointmentSchedulerPage";
 import BlogDetailPage from "./pages/BlogDetailPage";
 import BlogPage from "./pages/BlogPage";
 import BookingPage from "./pages/BookingPage";
 import ContactPage from "./pages/ContactPage";
+import CommunityFeedPage from "./pages/CommunityFeedPage";
 import CourseDetailPage from "./pages/CourseDetailPage";
 import CourseLibraryPage from "./pages/CourseLibraryPage";
+import DocumentLibraryPage from "./pages/DocumentLibraryPage";
 import FAQPage from "./pages/FAQPage";
 import LandingPage from "./pages/LandingPage";
 import LoginPage from "./pages/LoginPage";
 import MentorDashboardPage from "./pages/MentorDashboardPage";
 import MentorSearchPage from "./pages/MentorSearchPage";
+import MessagesPage from "./pages/MessagesPage";
 import ModerationPage from "./pages/ModerationPage";
 import NotFoundPage from "./pages/NotFoundPage";
 import ProfilePage from "./pages/ProfilePage";
@@ -48,6 +52,16 @@ function App() {
               </ProtectedRoute>
             }>
             <Route index element={<StudentDashboardPage />} />
+            <Route path="feed" element={<CommunityFeedPage role="student" />} />
+            <Route path="messages" element={<MessagesPage role="student" />} />
+            <Route
+              path="appointments"
+              element={<AppointmentSchedulerPage role="student" />}
+            />
+            <Route
+              path="documents"
+              element={<DocumentLibraryPage role="student" />}
+            />
             <Route path="mentors" element={<MentorSearchPage />} />
             <Route path="booking" element={<BookingPage />} />
             <Route path="video-call" element={<VideoCallPage />} />
@@ -65,6 +79,16 @@ function App() {
               </ProtectedRoute>
             }>
             <Route index element={<MentorDashboardPage />} />
+            <Route path="feed" element={<CommunityFeedPage role="mentor" />} />
+            <Route path="messages" element={<MessagesPage role="mentor" />} />
+            <Route
+              path="appointments"
+              element={<AppointmentSchedulerPage role="mentor" />}
+            />
+            <Route
+              path="documents"
+              element={<DocumentLibraryPage role="mentor" />}
+            />
             <Route path="profile" element={<ProfilePage />} />
             <Route path="moderation" element={<ModerationPage />} />
           </Route>
@@ -77,6 +101,16 @@ function App() {
               </ProtectedRoute>
             }>
             <Route index element={<AdminDashboardPage />} />
+            <Route path="feed" element={<CommunityFeedPage role="admin" />} />
+            <Route path="messages" element={<MessagesPage role="admin" />} />
+            <Route
+              path="appointments"
+              element={<AppointmentSchedulerPage role="admin" />}
+            />
+            <Route
+              path="documents"
+              element={<DocumentLibraryPage role="admin" />}
+            />
             <Route path="moderation" element={<ModerationPage />} />
             <Route path="profile" element={<ProfilePage />} />
           </Route>

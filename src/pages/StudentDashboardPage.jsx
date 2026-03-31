@@ -1,5 +1,7 @@
+import { useNavigate } from "react-router-dom";
 import MetricCard from "../components/dashboard/MetricCard";
 import Badge from "../components/ui/Badge";
+import Button from "../components/ui/Button";
 import Card from "../components/ui/Card";
 import EmptyState from "../components/ui/EmptyState";
 import Skeleton from "../components/ui/Skeleton";
@@ -28,11 +30,39 @@ const resources = [
 
 export default function StudentDashboardPage() {
   const { user } = useAuth();
+  const navigate = useNavigate();
 
   const studentName =
     user?.displayName ||
     user?.email?.split("@")[0]?.replace(/[._-]+/g, " ") ||
     "Student";
+
+  const quickActions = [
+    {
+      icon: "💬",
+      title: "Community Feed",
+      description: "Share and discuss with mentors",
+      onClick: () => navigate("/student/feed"),
+    },
+    {
+      icon: "📨",
+      title: "Messages",
+      description: "Chat with mentors",
+      onClick: () => navigate("/student/messages"),
+    },
+    {
+      icon: "📅",
+      title: "Appointments",
+      description: "Book sessions with mentors",
+      onClick: () => navigate("/student/appointments"),
+    },
+    {
+      icon: "📚",
+      title: "Documents",
+      description: "Download resources",
+      onClick: () => navigate("/student/documents"),
+    },
+  ];
 
   return (
     <div className="space-y-6">
@@ -50,6 +80,26 @@ export default function StudentDashboardPage() {
           <Badge>Section: C</Badge>
         </div>
       </Card>
+
+      {/* Quick Actions */}
+      <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        {quickActions.map((action) => (
+          <Card
+            key={action.title}
+            className="cursor-pointer hover:shadow-lg transition-shadow">
+            <div className="text-4xl mb-3">{action.icon}</div>
+            <h4 className="font-semibold mb-1">{action.title}</h4>
+            <p className="text-small text-neutral mb-3">{action.description}</p>
+            <Button
+              size="sm"
+              variant="primary"
+              onClick={action.onClick}
+              className="w-full">
+              Go
+            </Button>
+          </Card>
+        ))}
+      </section>
 
       <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <MetricCard

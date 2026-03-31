@@ -3,6 +3,10 @@ import { NavLink } from "react-router-dom";
 const roleLinks = {
   student: [
     { label: "Dashboard", to: "/student" },
+    { label: "Community Feed", to: "/student/feed" },
+    { label: "Messages", to: "/student/messages" },
+    { label: "Appointments", to: "/student/appointments" },
+    { label: "Documents", to: "/student/documents" },
     { label: "Mentor Search", to: "/student/mentors" },
     { label: "Booking", to: "/student/booking" },
     { label: "Video Call", to: "/student/video-call" },
@@ -12,11 +16,19 @@ const roleLinks = {
   ],
   mentor: [
     { label: "Dashboard", to: "/mentor" },
+    { label: "Community Feed", to: "/mentor/feed" },
+    { label: "Messages", to: "/mentor/messages" },
+    { label: "Appointments", to: "/mentor/appointments" },
+    { label: "Documents", to: "/mentor/documents" },
     { label: "Profile", to: "/mentor/profile" },
     { label: "Moderation", to: "/mentor/moderation" },
   ],
   admin: [
     { label: "Dashboard", to: "/admin" },
+    { label: "Community Feed", to: "/admin/feed" },
+    { label: "Messages", to: "/admin/messages" },
+    { label: "Appointments", to: "/admin/appointments" },
+    { label: "Documents", to: "/admin/documents" },
     { label: "Moderation", to: "/admin/moderation" },
     { label: "Profile", to: "/admin/profile" },
   ],
@@ -26,7 +38,7 @@ export default function SidebarNav({ role }) {
   const links = roleLinks[role] ?? [];
 
   return (
-    <aside className="fixed left-0 top-0 z-30 h-screen w-[260px] bg-primary px-4 py-6 text-white lg:sticky">
+    <aside className="fixed left-0 top-0 z-30 h-screen w-[260px] bg-primary px-4 py-6 text-white overflow-y-auto lg:sticky">
       <h2 className="px-2 text-h3 text-white">MetroBridge</h2>
       <p className="px-2 pt-1 text-small text-slate-300">
         Metropolitan University
