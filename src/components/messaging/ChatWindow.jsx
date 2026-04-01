@@ -3,7 +3,14 @@ import Button from "../ui/Button";
 import Card from "../ui/Card";
 import { useAuth } from "../../hooks/useAuth";
 
-export default function ChatWindow({ conversation, onSendMessage, onClose }) {
+export default function ChatWindow({
+  conversation,
+  onSendMessage,
+  onClose,
+  isMinimized,
+  onToggleMinimize,
+  unreadCount = 0,
+}) {
   const [messageText, setMessageText] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const messagesEndRef = useRef(null);
@@ -11,8 +18,9 @@ export default function ChatWindow({ conversation, onSendMessage, onClose }) {
 
   // Auto scroll to bottom
   useEffect(() => {
+    if (isMinimized) return;
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [conversation?.messages]);
+  }, [conversation?.messages, isMinimized]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -44,6 +52,23 @@ export default function ChatWindow({ conversation, onSendMessage, onClose }) {
 
   const otherUser = conversation.participants.find((p) => p.id !== user?.uid);
 
+  if (isMinimized) {
+    return (
+      <div className="fixed bottom-0 right-4 z-40">
+        <button
+          onClick={onToggleMinimize}
+          className="relative flex items-center gap-2 rounded-t-lg bg-primary px-4 py-3 text-white shadow-xl transition-colors hover:bg-primary-light">
+          <span className="font-semibold text-sm">{otherUser?.name}</span>
+          {unreadCount > 0 && (
+            <span className="absolute -top-2 -right-2 flex h-6 min-w-6 items-center justify-center rounded-full bg-red-600 px-1.5 text-xs font-bold text-white animate-pulse">
+              {unreadCount > 99 ? "99+" : unreadCount}
+            </span>
+          )}
+        </button>
+      </div>
+    );
+  }
+
   return (
     <Card className="fixed bottom-0 right-4 w-96 max-w-full rounded-t-lg rounded-b-none shadow-xl flex flex-col h-96 bg-white border-t border-l border-r border-border">
       {/* Header */}
@@ -52,11 +77,20 @@ export default function ChatWindow({ conversation, onSendMessage, onClose }) {
           <p className="font-semibold">{otherUser?.name}</p>
           <p className="text-xs text-neutral">Online</p>
         </div>
-        <button
-          onClick={onClose}
-          className="text-xl hover:text-primary transition-colors">
-          ✕
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={onToggleMinimize}
+            className="rounded px-2 py-1 text-sm hover:bg-neutral-light transition-colors"
+            aria-label="Minimize chat">
+            _
+          </button>
+          <button
+            onClick={onClose}
+            className="text-xl hover:text-primary transition-colors"
+            aria-label="Close chat">
+            ✕
+          </button>
+        </div>
       </div>
 
       {/* Messages */}

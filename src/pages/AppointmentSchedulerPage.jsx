@@ -4,6 +4,7 @@ import Button from "../components/ui/Button";
 import Badge from "../components/ui/Badge";
 import Modal from "../components/ui/Modal";
 import EmptyState from "../components/ui/EmptyState";
+import MotionReveal from "../components/ui/MotionReveal";
 import { useAuth } from "../hooks/useAuth";
 
 // Mock mentors data
@@ -13,7 +14,6 @@ const MOCK_MENTORS = [
     name: "Dr. Sarah Ahmed",
     expertise: "React & Web Development",
     availability: ["Monday 4-6 PM", "Wednesday 3-5 PM", "Friday 2-4 PM"],
-    hourlyRate: "500 BDT",
     rating: 4.8,
   },
   {
@@ -21,7 +21,6 @@ const MOCK_MENTORS = [
     name: "Prof. Sabbir Hasan",
     expertise: "Data Structures & Algorithms",
     availability: ["Tuesday 5-7 PM", "Thursday 4-6 PM"],
-    hourlyRate: "600 BDT",
     rating: 4.9,
   },
   {
@@ -29,7 +28,6 @@ const MOCK_MENTORS = [
     name: "Nafisa Rahman",
     expertise: "Database & Backend",
     availability: ["Monday 6-8 PM", "Saturday 2-4 PM"],
-    hourlyRate: "550 BDT",
     rating: 4.7,
   },
 ];
@@ -139,24 +137,26 @@ export default function AppointmentSchedulerPage({ role }) {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <Card className="bg-gradient-to-r from-primary to-primary-light text-white">
-        <p className="text-small font-semibold uppercase tracking-wide text-white/80">
-          Appointments & Scheduling
-        </p>
-        <h2 className="text-white">
-          {role === "student" ? "Book a Session" : "Appointment Management"}
-        </h2>
-        <p className="mt-2 text-white/90">
-          {role === "student"
-            ? "Schedule 1-on-1 sessions with experienced mentors"
-            : "Manage your appointment requests and confirmations"}
-        </p>
-      </Card>
+      <MotionReveal>
+        <Card className="bg-gradient-to-r from-primary to-primary-light text-white">
+          <p className="text-small font-semibold uppercase tracking-wide text-white/80">
+            Appointments & Scheduling
+          </p>
+          <h2 className="text-white">
+            {role === "student" ? "Book a Session" : "Appointment Management"}
+          </h2>
+          <p className="mt-2 text-white/90">
+            {role === "student"
+              ? "Schedule 1-on-1 sessions with experienced mentors"
+              : "Manage your appointment requests and confirmations"}
+          </p>
+        </Card>
+      </MotionReveal>
 
       <div className="grid gap-6 lg:grid-cols-3">
         {/* Left Panel - Mentors or Stats */}
         {role === "student" ? (
-          <div className="lg:col-span-1">
+          <MotionReveal className="lg:col-span-1" delay={80}>
             <Card>
               <h3 className="mb-4">Available Mentors</h3>
               <div className="space-y-3 max-h-96 overflow-y-auto">
@@ -164,7 +164,7 @@ export default function AppointmentSchedulerPage({ role }) {
                   <button
                     key={mentor.id}
                     onClick={() => setSelectedMentor(mentor)}
-                    className={`w-full text-left p-3 rounded-lg transition-colors ${
+                    className={`w-full text-left p-3 rounded-lg transition-all duration-200 hover:-translate-y-0.5 ${
                       selectedMentor?.id === mentor.id
                         ? "bg-primary/10 border border-primary"
                         : "border border-border hover:border-primary"
@@ -180,16 +180,16 @@ export default function AppointmentSchedulerPage({ role }) {
                         ⭐ {mentor.rating}
                       </Badge>
                     </div>
-                    <p className="text-xs text-primary font-semibold">
-                      {mentor.hourlyRate}
+                    <p className="text-xs text-neutral font-semibold">
+                      Session based mentorship
                     </p>
                   </button>
                 ))}
               </div>
             </Card>
-          </div>
+          </MotionReveal>
         ) : (
-          <div className="lg:col-span-1">
+          <MotionReveal className="lg:col-span-1" delay={80}>
             <Card>
               <h3 className="mb-4">Pending Requests</h3>
               {isLoading ? (
@@ -214,11 +214,11 @@ export default function AppointmentSchedulerPage({ role }) {
                 <p className="text-neutral text-sm">No pending requests</p>
               )}
             </Card>
-          </div>
+          </MotionReveal>
         )}
 
         {/* Right Panel - Booking Form or Appointments */}
-        <div className="lg:col-span-2">
+        <MotionReveal className="lg:col-span-2" delay={140}>
           {role === "student" && selectedMentor ? (
             <Card>
               <div className="flex items-center justify-between mb-6 pb-4 border-b border-border">
@@ -242,7 +242,7 @@ export default function AppointmentSchedulerPage({ role }) {
                     <button
                       key={idx}
                       onClick={() => setIsBookingModalOpen(true)}
-                      className="p-2 border border-border rounded-lg hover:bg-primary/10 hover:border-primary transition-colors text-left">
+                      className="p-2 border border-border rounded-lg hover:bg-primary/10 hover:border-primary transition-all duration-200 hover:-translate-y-0.5 text-left">
                       <p className="text-sm font-semibold text-primary">
                         {slot}
                       </p>
@@ -285,7 +285,7 @@ export default function AppointmentSchedulerPage({ role }) {
                   {userAppointments.map((appointment) => (
                     <div
                       key={appointment.id}
-                      className="border border-border rounded-lg p-4 hover:shadow-md transition-shadow">
+                      className="border border-border rounded-lg p-4 hover:shadow-md transition-all duration-200 hover:-translate-y-0.5">
                       <div className="flex items-start justify-between mb-3">
                         <div>
                           <p className="font-semibold">
@@ -339,7 +339,7 @@ export default function AppointmentSchedulerPage({ role }) {
               )}
             </Card>
           )}
-        </div>
+        </MotionReveal>
       </div>
 
       {/* Booking Modal */}

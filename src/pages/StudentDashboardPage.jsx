@@ -6,6 +6,13 @@ import Card from "../components/ui/Card";
 import EmptyState from "../components/ui/EmptyState";
 import Skeleton from "../components/ui/Skeleton";
 import { useAuth } from "../hooks/useAuth";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faBookOpen,
+  faCalendarCheck,
+  faComments,
+  faEnvelope,
+} from "@fortawesome/free-solid-svg-icons";
 
 const sessions = [
   {
@@ -39,25 +46,25 @@ export default function StudentDashboardPage() {
 
   const quickActions = [
     {
-      icon: "💬",
+      icon: faComments,
       title: "Community Feed",
       description: "Share and discuss with mentors",
       onClick: () => navigate("/student/feed"),
     },
     {
-      icon: "📨",
+      icon: faEnvelope,
       title: "Messages",
       description: "Chat with mentors",
       onClick: () => navigate("/student/messages"),
     },
     {
-      icon: "📅",
+      icon: faCalendarCheck,
       title: "Appointments",
       description: "Book sessions with mentors",
       onClick: () => navigate("/student/appointments"),
     },
     {
-      icon: "📚",
+      icon: faBookOpen,
       title: "Documents",
       description: "Download resources",
       onClick: () => navigate("/student/documents"),
@@ -87,7 +94,9 @@ export default function StudentDashboardPage() {
           <Card
             key={action.title}
             className="cursor-pointer hover:shadow-lg transition-shadow">
-            <div className="text-4xl mb-3">{action.icon}</div>
+            <div className="text-3xl mb-3 text-primary">
+              <FontAwesomeIcon icon={action.icon} />
+            </div>
             <h4 className="font-semibold mb-1">{action.title}</h4>
             <p className="text-small text-neutral mb-3">{action.description}</p>
             <Button

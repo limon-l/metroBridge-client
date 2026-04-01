@@ -4,6 +4,13 @@ import Badge from "../components/ui/Badge";
 import Button from "../components/ui/Button";
 import Card from "../components/ui/Card";
 import DataTable from "../components/ui/DataTable";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faBookOpen,
+  faCalendarCheck,
+  faComments,
+  faEnvelope,
+} from "@fortawesome/free-solid-svg-icons";
 
 const approvals = [
   {
@@ -27,25 +34,25 @@ export default function AdminDashboardPage() {
 
   const quickActions = [
     {
-      icon: "💬",
+      icon: faComments,
       title: "Community Feed",
       description: "Moderate posts & content",
       onClick: () => navigate("/admin/feed"),
     },
     {
-      icon: "📨",
+      icon: faEnvelope,
       title: "Messages",
       description: "Message management",
       onClick: () => navigate("/admin/messages"),
     },
     {
-      icon: "📅",
+      icon: faCalendarCheck,
       title: "Appointments",
       description: "View all appointments",
       onClick: () => navigate("/admin/appointments"),
     },
     {
-      icon: "📚",
+      icon: faBookOpen,
       title: "Documents",
       description: "Manage resources",
       onClick: () => navigate("/admin/documents"),
@@ -85,7 +92,9 @@ export default function AdminDashboardPage() {
           <Card
             key={action.title}
             className="cursor-pointer hover:shadow-lg transition-shadow">
-            <div className="text-4xl mb-3">{action.icon}</div>
+            <div className="text-3xl mb-3 text-primary">
+              <FontAwesomeIcon icon={action.icon} />
+            </div>
             <h4 className="font-semibold mb-1">{action.title}</h4>
             <p className="text-small text-neutral mb-3">{action.description}</p>
             <Button

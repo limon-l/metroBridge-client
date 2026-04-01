@@ -4,10 +4,20 @@ import Button from "../components/ui/Button";
 import ChatWindow from "../components/messaging/ChatWindow";
 import EmptyState from "../components/ui/EmptyState";
 import { useAuth } from "../hooks/useAuth";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faBell,
+  faComments,
+  faMessage,
+  faPaperPlane,
+  faSignal,
+} from "@fortawesome/free-solid-svg-icons";
 
 export default function MessagesPage({ role }) {
   const [conversations, setConversations] = useState([]);
   const [selectedConversation, setSelectedConversation] = useState(null);
+  const [isMiniChatMinimized, setIsMiniChatMinimized] = useState(false);
+  const [notificationText, setNotificationText] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const { user } = useAuth();
 
@@ -42,6 +52,7 @@ export default function MessagesPage({ role }) {
           lastMessage:
             "I'm almost done, just need help with the context API part.",
           lastMessageTime: new Date(Date.now() - 1800000).toISOString(),
+          unreadCount: 0,
         },
       ];
       setConversations(mockConversations);
@@ -70,6 +81,7 @@ export default function MessagesPage({ role }) {
           messages: [...(conv.messages || []), newMessage],
           lastMessage: messageData.text,
           lastMessageTime: messageData.timestamp,
+          unreadCount: 0,
         };
       }
       return conv;
@@ -80,6 +92,90 @@ export default function MessagesPage({ role }) {
       updatedConversations.find((c) => c.id === messageData.conversationId),
     );
   };
+
+  const totalUnread = conversations.reduce(
+    (sum, conv) => sum + (conv.unreadCount || 0),
+    0,
+  );
+
+  useEffect(() => {
+    localStorage.setItem(`messagesUnread:${role}`, String(totalUnread));
+  }, [role, totalUnread]);
+
+  useEffect(() => {
+    if (!selectedConversation) return;
+
+    setConversations((prev) => {
+      const updated = prev.map((conv) =>
+        conv.id === selectedConversation.id
+          ? { ...conv, unreadCount: 0 }
+          : conv,
+      );
+      localStorage.setItem("conversations", JSON.stringify(updated));
+      return updated;
+    });
+  }, [selectedConversation]);
+
+  useEffect(() => {
+    if (!conversations.length || !user?.uid) return;
+
+    const autoReplies = [
+      "Thanks, that makes sense. Can we review this in the next session?",
+      "I just shared updated notes. Please check when you get a chance.",
+      "Great progress. Keep the momentum going.",
+      "Can we meet 15 minutes earlier tomorrow?",
+    ];
+
+    const intervalId = setInterval(() => {
+      setConversations((prev) => {
+        if (!prev.length) return prev;
+
+        const target = prev[0];
+        const sender = target.participants.find((p) => p.id !== user.uid);
+        const randomText =
+          autoReplies[Math.floor(Math.random() * autoReplies.length)];
+        const nowIso = new Date().toISOString();
+        const isActiveThread = selectedConversation?.id === target.id;
+        const shouldCountAsUnread = !isActiveThread || isMiniChatMinimized;
+
+        const next = prev.map((conv) => {
+          if (conv.id !== target.id) return conv;
+          const incomingMessage = {
+            id: `auto-${Date.now()}`,
+            senderId: sender?.id || "system",
+            text: randomText,
+            timestamp: nowIso,
+          };
+
+          return {
+            ...conv,
+            messages: [...(conv.messages || []), incomingMessage],
+            lastMessage: randomText,
+            lastMessageTime: nowIso,
+            unreadCount: shouldCountAsUnread ? (conv.unreadCount || 0) + 1 : 0,
+          };
+        });
+
+        localStorage.setItem("conversations", JSON.stringify(next));
+        setNotificationText(`${sender?.name || "New message"}: ${randomText}`);
+
+        return next;
+      });
+    }, 28000);
+
+    return () => clearInterval(intervalId);
+  }, [
+    conversations.length,
+    isMiniChatMinimized,
+    selectedConversation,
+    user?.uid,
+  ]);
+
+  useEffect(() => {
+    if (!notificationText) return;
+    const timer = setTimeout(() => setNotificationText(""), 4500);
+    return () => clearTimeout(timer);
+  }, [notificationText]);
 
   const formatTime = (timestamp) => {
     const date = new Date(timestamp);
@@ -114,7 +210,24 @@ export default function MessagesPage({ role }) {
           Connect with mentors and students. Share resources and schedule
           sessions.
         </p>
+        <div className="mt-4 flex items-center gap-3">
+          <span className="inline-flex items-center gap-2 rounded-full bg-white/20 px-3 py-1 text-xs font-semibold">
+            <FontAwesomeIcon icon={faSignal} /> Live status active
+          </span>
+          <span className="inline-flex items-center gap-2 rounded-full bg-white/20 px-3 py-1 text-xs font-semibold">
+            <FontAwesomeIcon icon={faComments} /> {conversations.length} threads
+          </span>
+        </div>
       </Card>
+
+      {notificationText && (
+        <div className="animate-in fade-in slide-in-from-top-2 duration-300 rounded-lg border border-primary/20 bg-white px-4 py-3 shadow-soft">
+          <p className="text-sm font-semibold text-primary inline-flex items-center gap-2">
+            <FontAwesomeIcon icon={faBell} /> New message
+          </p>
+          <p className="mt-1 text-sm text-neutral">{notificationText}</p>
+        </div>
+      )}
 
       <div className="grid gap-6 lg:grid-cols-3">
         {/* Conversations List */}
@@ -122,11 +235,19 @@ export default function MessagesPage({ role }) {
           <Card>
             <div className="flex items-center justify-between mb-4">
               <h3>Conversations</h3>
-              {role !== "student" && (
-                <Button size="sm" variant="primary">
-                  New Chat
+              <div className="relative">
+                {totalUnread > 0 && (
+                  <span className="absolute -top-2 -right-2 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-600 px-1 text-[10px] font-bold text-white">
+                    {totalUnread > 99 ? "99+" : totalUnread}
+                  </span>
+                )}
+                <Button
+                  size="sm"
+                  variant="primary"
+                  className="inline-flex items-center gap-2">
+                  <FontAwesomeIcon icon={faMessage} /> Inbox
                 </Button>
-              )}
+              </div>
             </div>
 
             {isLoading ? (
@@ -161,9 +282,18 @@ export default function MessagesPage({ role }) {
                           {(otherUser?.name || "U").charAt(0).toUpperCase()}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="font-semibold text-sm">
-                            {otherUser?.name}
-                          </p>
+                          <div className="flex items-center justify-between gap-2">
+                            <p className="font-semibold text-sm truncate">
+                              {otherUser?.name}
+                            </p>
+                            {(conv.unreadCount || 0) > 0 && (
+                              <span className="h-5 min-w-5 rounded-full bg-red-600 px-1.5 text-[10px] font-bold text-white inline-flex items-center justify-center">
+                                {conv.unreadCount > 99
+                                  ? "99+"
+                                  : conv.unreadCount}
+                              </span>
+                            )}
+                          </div>
                           <p className="text-xs text-neutral truncate">
                             {truncateMessage(conv.lastMessage)}
                           </p>
@@ -180,87 +310,47 @@ export default function MessagesPage({ role }) {
           </Card>
         </div>
 
-        {/* Chat View */}
+        {/* Conversation Status */}
         <div className="lg:col-span-2">
           {selectedConversation ? (
-            <Card className="h-96 flex flex-col">
-              <div className="flex items-center justify-between border-b border-border pb-4 mb-4">
-                <div>
-                  <p className="font-semibold">
-                    {
-                      selectedConversation.participants.find(
-                        (p) => p.id !== user?.uid,
-                      )?.name
-                    }
-                  </p>
-                  <p className="text-small text-neutral">Online</p>
-                </div>
-                <button className="text-xl hover:text-primary transition-colors">
-                  ⋮
-                </button>
-              </div>
-
-              {/* Messages */}
-              <div className="flex-1 overflow-y-auto space-y-3 mb-4">
-                {selectedConversation.messages?.map((message) => {
-                  const isOwn = message.senderId === user?.uid;
-
-                  return (
-                    <div
-                      key={message.id}
-                      className={`flex ${isOwn ? "justify-end" : "justify-start"}`}>
-                      <div
-                        className={`max-w-xs px-3 py-2 rounded-lg ${
-                          isOwn
-                            ? "bg-primary text-white rounded-br-none"
-                            : "bg-neutral-light text-text rounded-bl-none"
-                        }`}>
-                        <p className="text-sm break-words">{message.text}</p>
-                        <p
-                          className={`text-xs mt-1 ${isOwn ? "text-white/70" : "text-neutral"}`}>
-                          {new Date(message.timestamp).toLocaleTimeString([], {
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })}
-                        </p>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-
-              {/* Input */}
-              <form
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  const input = e.target.elements[0];
-                  if (input.value.trim()) {
-                    handleSendMessage({
-                      conversationId: selectedConversation.id,
-                      text: input.value,
-                      senderId: user?.uid,
-                      senderName:
-                        user?.displayName || user?.email?.split("@")[0],
-                      timestamp: new Date().toISOString(),
-                    });
-                    input.value = "";
+            <Card className="h-96 flex flex-col justify-between bg-gradient-to-br from-white to-slate-50">
+              <div>
+                <p className="text-xs uppercase tracking-wide text-neutral font-semibold inline-flex items-center gap-2">
+                  <FontAwesomeIcon icon={faComments} /> Active thread
+                </p>
+                <h3 className="mt-3">
+                  {
+                    selectedConversation.participants.find(
+                      (p) => p.id !== user?.uid,
+                    )?.name
                   }
-                }}
-                className="flex gap-2">
-                <input
-                  type="text"
-                  placeholder="Type a message..."
-                  maxLength={500}
-                  className="flex-1 px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-sm"
-                />
-                <Button type="submit" size="sm" variant="primary">
-                  Send
+                </h3>
+                <p className="text-small text-neutral mt-2">
+                  Mini-chat is enabled at the bottom right. You can minimize it,
+                  and new messages will continue to show unread notifications.
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <div className="rounded-lg border border-border bg-white p-3">
+                  <p className="text-xs text-neutral">Latest message</p>
+                  <p className="text-sm font-medium mt-1">
+                    {selectedConversation.lastMessage}
+                  </p>
+                </div>
+                <Button
+                  variant="secondary"
+                  className="inline-flex items-center gap-2"
+                  onClick={() => setIsMiniChatMinimized((prev) => !prev)}>
+                  <FontAwesomeIcon icon={faPaperPlane} />
+                  {isMiniChatMinimized
+                    ? "Open chat bubble"
+                    : "Minimize chat bubble"}
                 </Button>
-              </form>
+              </div>
             </Card>
           ) : (
             <EmptyState
-              icon="💬"
               title="Select a conversation"
               description="Choose a conversation from the list to start chatting"
             />
@@ -274,6 +364,12 @@ export default function MessagesPage({ role }) {
           conversation={selectedConversation}
           onSendMessage={handleSendMessage}
           onClose={() => setSelectedConversation(null)}
+          isMinimized={isMiniChatMinimized}
+          onToggleMinimize={() => setIsMiniChatMinimized((prev) => !prev)}
+          unreadCount={
+            conversations.find((c) => c.id === selectedConversation.id)
+              ?.unreadCount || 0
+          }
         />
       )}
     </div>

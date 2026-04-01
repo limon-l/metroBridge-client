@@ -3,6 +3,13 @@ import MetricCard from "../components/dashboard/MetricCard";
 import Badge from "../components/ui/Badge";
 import Button from "../components/ui/Button";
 import Card from "../components/ui/Card";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faBookOpen,
+  faCalendarCheck,
+  faComments,
+  faEnvelope,
+} from "@fortawesome/free-solid-svg-icons";
 
 const sessionRequests = [
   {
@@ -18,25 +25,25 @@ export default function MentorDashboardPage() {
 
   const quickActions = [
     {
-      icon: "💬",
+      icon: faComments,
       title: "Community Feed",
       description: "Share insights with students",
       onClick: () => navigate("/mentor/feed"),
     },
     {
-      icon: "📨",
+      icon: faEnvelope,
       title: "Messages",
       description: "Chat with students",
       onClick: () => navigate("/mentor/messages"),
     },
     {
-      icon: "📅",
+      icon: faCalendarCheck,
       title: "Appointments",
       description: "Manage session requests",
       onClick: () => navigate("/mentor/appointments"),
     },
     {
-      icon: "📚",
+      icon: faBookOpen,
       title: "Documents",
       description: "Upload materials",
       onClick: () => navigate("/mentor/documents"),
@@ -58,7 +65,9 @@ export default function MentorDashboardPage() {
           <Card
             key={action.title}
             className="cursor-pointer hover:shadow-lg transition-shadow">
-            <div className="text-4xl mb-3">{action.icon}</div>
+            <div className="text-3xl mb-3 text-primary">
+              <FontAwesomeIcon icon={action.icon} />
+            </div>
             <h4 className="font-semibold mb-1">{action.title}</h4>
             <p className="text-small text-neutral mb-3">{action.description}</p>
             <Button

@@ -1,4 +1,5 @@
 import { NavLink } from "react-router-dom";
+import { useEffect, useState } from "react";
 
 const roleLinks = {
   student: [
@@ -12,7 +13,6 @@ const roleLinks = {
     { label: "Video Call", to: "/student/video-call" },
     { label: "Course Library", to: "/student/library" },
     { label: "Profile", to: "/student/profile" },
-    { label: "Moderation", to: "/student/moderation" },
   ],
   mentor: [
     { label: "Dashboard", to: "/mentor" },
@@ -21,7 +21,6 @@ const roleLinks = {
     { label: "Appointments", to: "/mentor/appointments" },
     { label: "Documents", to: "/mentor/documents" },
     { label: "Profile", to: "/mentor/profile" },
-    { label: "Moderation", to: "/mentor/moderation" },
   ],
   admin: [
     { label: "Dashboard", to: "/admin" },
@@ -36,6 +35,19 @@ const roleLinks = {
 
 export default function SidebarNav({ role }) {
   const links = roleLinks[role] ?? [];
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  useEffect(() => {
+    const getUnread = () => {
+      const value = Number(localStorage.getItem(`messagesUnread:${role}`) || 0);
+      setUnreadCount(Number.isFinite(value) ? value : 0);
+    };
+
+    getUnread();
+    const intervalId = setInterval(getUnread, 1200);
+
+    return () => clearInterval(intervalId);
+  }, [role]);
 
   return (
     <aside className="fixed left-0 top-0 z-30 h-screen w-[260px] bg-primary px-4 py-6 text-white overflow-y-auto lg:sticky">
@@ -56,7 +68,14 @@ export default function SidebarNav({ role }) {
             }
             end={link.to === `/${role}`}
             to={link.to}>
-            {link.label}
+            <span className="flex items-center justify-between gap-2">
+              <span>{link.label}</span>
+              {link.label === "Messages" && unreadCount > 0 && (
+                <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-red-600 px-1 text-[10px] font-bold text-white animate-pulse">
+                  {unreadCount > 99 ? "99+" : unreadCount}
+                </span>
+              )}
+            </span>
           </NavLink>
         ))}
       </nav>

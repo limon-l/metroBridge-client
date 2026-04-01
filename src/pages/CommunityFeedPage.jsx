@@ -5,6 +5,13 @@ import PostCard from "../components/feed/PostCard";
 import CreatePostModal from "../components/feed/CreatePostModal";
 import EmptyState from "../components/ui/EmptyState";
 import { useAuth } from "../hooks/useAuth";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faCamera,
+  faEdit,
+  faPenToSquare,
+  faRepeat,
+} from "@fortawesome/free-solid-svg-icons";
 
 export default function FeedPage({ role }) {
   const [posts, setPosts] = useState([]);
@@ -177,7 +184,7 @@ export default function FeedPage({ role }) {
             <button
               onClick={() => setIsCreateModalOpen(true)}
               className="flex-1 flex items-center justify-center gap-2 py-2 text-primary hover:bg-primary/5 rounded-lg transition-colors text-small font-semibold">
-              <span>📷</span>
+              <FontAwesomeIcon icon={faCamera} />
               Photo
             </button>
             <Button
@@ -185,7 +192,7 @@ export default function FeedPage({ role }) {
               variant="primary"
               onClick={() => setIsCreateModalOpen(true)}
               className="flex items-center gap-2">
-              <span>✏️</span>
+              <FontAwesomeIcon icon={faPenToSquare} />
               Post
             </Button>
           </div>
@@ -200,13 +207,14 @@ export default function FeedPage({ role }) {
           </div>
         ) : posts.length === 0 ? (
           <EmptyState
-            icon="📝"
             title="No posts yet"
             description="Be the first to share something with the community!"
             action={
               <Button
                 variant="primary"
+                className="inline-flex items-center gap-2"
                 onClick={() => setIsCreateModalOpen(true)}>
+                <FontAwesomeIcon icon={faEdit} />
                 Create a post
               </Button>
             }
@@ -217,7 +225,7 @@ export default function FeedPage({ role }) {
               {/* Repost indicator */}
               {post.sharedPost && (
                 <div className="flex items-center gap-2 text-small text-neutral mb-2 ml-4">
-                  <span>🔄</span>
+                  <FontAwesomeIcon icon={faRepeat} />
                   <span>
                     {post.author?.name} shared {post.sharedPost.author?.name}'s
                     post

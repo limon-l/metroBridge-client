@@ -5,6 +5,17 @@ import Badge from "../components/ui/Badge";
 import Modal from "../components/ui/Modal";
 import EmptyState from "../components/ui/EmptyState";
 import { useAuth } from "../hooks/useAuth";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faBook,
+  faBullseye,
+  faFileArrowDown,
+  faFileCirclePlus,
+  faFileLines,
+  faFolderOpen,
+  faGraduationCap,
+  faListCheck,
+} from "@fortawesome/free-solid-svg-icons";
 
 export default function DocumentLibraryPage({ role }) {
   const [documents, setDocuments] = useState([]);
@@ -20,11 +31,11 @@ export default function DocumentLibraryPage({ role }) {
   const { user } = useAuth();
 
   const CATEGORIES = [
-    { value: "resources", label: "📚 Resources" },
-    { value: "assignments", label: "📝 Assignments" },
-    { value: "lecture-notes", label: "📖 Lecture Notes" },
-    { value: "practice", label: "🎯 Practice Problems" },
-    { value: "reference", label: "📚 Reference Materials" },
+    { value: "resources", label: "Resources", icon: faFolderOpen },
+    { value: "assignments", label: "Assignments", icon: faListCheck },
+    { value: "lecture-notes", label: "Lecture Notes", icon: faBook },
+    { value: "practice", label: "Practice Problems", icon: faBullseye },
+    { value: "reference", label: "Reference Materials", icon: faGraduationCap },
   ];
 
   // Load documents from localStorage
@@ -150,7 +161,12 @@ export default function DocumentLibraryPage({ role }) {
 
   const getCategoryIcon = (category) => {
     const cat = CATEGORIES.find((c) => c.value === category);
-    return cat ? cat.label : "📄";
+    return cat?.icon || faFileLines;
+  };
+
+  const getCategoryLabel = (category) => {
+    const cat = CATEGORIES.find((c) => c.value === category);
+    return cat?.label || "Document";
   };
 
   return (
@@ -183,8 +199,9 @@ export default function DocumentLibraryPage({ role }) {
           {role === "mentor" && (
             <Button
               variant="primary"
+              className="inline-flex items-center gap-2"
               onClick={() => setIsUploadModalOpen(true)}>
-              ⬆️ Upload Document
+              <FontAwesomeIcon icon={faFileCirclePlus} /> Upload Document
             </Button>
           )}
         </div>
@@ -211,7 +228,9 @@ export default function DocumentLibraryPage({ role }) {
                   ? "bg-primary text-white"
                   : "bg-neutral-light text-text hover:bg-neutral"
               }`}>
-              {cat.label}
+              <span className="inline-flex items-center gap-2">
+                <FontAwesomeIcon icon={cat.icon} /> {cat.label}
+              </span>
             </button>
           ))}
         </div>
@@ -224,7 +243,6 @@ export default function DocumentLibraryPage({ role }) {
         </div>
       ) : filteredDocuments.length === 0 ? (
         <EmptyState
-          icon="📄"
           title="No documents found"
           description={
             searchTerm || selectedCategory !== "all"
@@ -237,7 +255,9 @@ export default function DocumentLibraryPage({ role }) {
             role === "mentor" && !searchTerm && selectedCategory === "all" ? (
               <Button
                 variant="primary"
+                className="inline-flex items-center gap-2"
                 onClick={() => setIsUploadModalOpen(true)}>
+                <FontAwesomeIcon icon={faFileCirclePlus} />
                 Upload Document
               </Button>
             ) : null
@@ -250,14 +270,14 @@ export default function DocumentLibraryPage({ role }) {
               key={doc.id}
               className="flex flex-col hover:shadow-lg transition-shadow">
               {/* Document Icon */}
-              <div className="text-4xl mb-3">
-                {getCategoryIcon(doc.category).split(" ")[0]}
+              <div className="text-3xl mb-3 text-primary">
+                <FontAwesomeIcon icon={getCategoryIcon(doc.category)} />
               </div>
 
               {/* Title & Category */}
               <h4 className="font-semibold mb-2 line-clamp-2">{doc.title}</h4>
               <Badge className="mb-3 w-fit">
-                {getCategoryIcon(doc.category).split(" ")[1]}
+                {getCategoryLabel(doc.category)}
               </Badge>
 
               {/* Description */}
@@ -298,12 +318,13 @@ export default function DocumentLibraryPage({ role }) {
                 <Button
                   size="sm"
                   variant="primary"
-                  onClick={() => handleDownloadDocument(doc.id)}
                   className={
                     role === "mentor" && doc.uploadedBy.id === user?.uid
-                      ? "flex-1"
-                      : "w-full"
-                  }>
+                      ? "flex-1 inline-flex items-center justify-center gap-2"
+                      : "w-full inline-flex items-center justify-center gap-2"
+                  }
+                  onClick={() => handleDownloadDocument(doc.id)}>
+                  <FontAwesomeIcon icon={faFileArrowDown} />
                   Download
                 </Button>
               </div>
