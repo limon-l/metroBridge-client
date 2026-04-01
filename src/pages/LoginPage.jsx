@@ -5,7 +5,6 @@ import Button from "../components/ui/Button";
 import InputField from "../components/ui/InputField";
 import { useAuth } from "../hooks/useAuth";
 import { useToast } from "../hooks/useToast";
-import { getFirebaseAuthErrorMessage } from "../utils/firebaseAuthError";
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -33,30 +32,17 @@ export default function LoginPage() {
       const user = await login({ email: email.trim(), password });
       showToast("Login successful.");
 
-      const adminEmails = (import.meta.env.VITE_ADMIN_EMAILS || "")
-        .split(",")
-        .map((item) => item.trim().toLowerCase())
-        .filter(Boolean);
-      const mentorEmails = (import.meta.env.VITE_MENTOR_EMAILS || "")
-        .split(",")
-        .map((item) => item.trim().toLowerCase())
-        .filter(Boolean);
-
-      const currentEmail = user?.email?.toLowerCase() || "";
-      if (adminEmails.includes(currentEmail)) {
+      if (user?.role === "admin") {
         navigate("/admin");
         return;
       }
-      if (mentorEmails.includes(currentEmail)) {
+      if (user?.role === "mentor") {
         navigate("/mentor");
         return;
       }
       navigate("/student");
     } catch (error) {
-      showToast(
-        getFirebaseAuthErrorMessage(error, "Unable to login right now."),
-        "error",
-      );
+      showToast(error?.message || "Unable to login right now.", "error");
     } finally {
       setIsSubmitting(false);
     }

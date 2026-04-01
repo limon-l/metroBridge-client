@@ -27,12 +27,12 @@ export default function PublicNavbar() {
           </a>
         </nav>
         <div className="flex items-center gap-2">
-          <Link to="/login">
+          <Link to="/student-login">
             <Button size="sm" variant="secondary">
               Login
             </Button>
           </Link>
-          <Link to="/signup">
+          <Link to="/student-signup">
             <Button size="sm" variant="cta">
               Get Started
             </Button>

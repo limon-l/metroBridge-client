@@ -5,7 +5,6 @@ const roleLinks = {
   student: [
     { label: "Dashboard", to: "/student" },
     { label: "Community Feed", to: "/student/feed" },
-    { label: "Messages", to: "/student/messages" },
     { label: "Appointments", to: "/student/appointments" },
     { label: "Documents", to: "/student/documents" },
     { label: "Mentor Search", to: "/student/mentors" },

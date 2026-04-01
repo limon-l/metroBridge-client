@@ -6,35 +6,16 @@ import Modal from "../components/ui/Modal";
 import EmptyState from "../components/ui/EmptyState";
 import MotionReveal from "../components/ui/MotionReveal";
 import { useAuth } from "../hooks/useAuth";
-
-// Mock mentors data
-const MOCK_MENTORS = [
-  {
-    id: "mentor1",
-    name: "Dr. Sarah Ahmed",
-    expertise: "React & Web Development",
-    availability: ["Monday 4-6 PM", "Wednesday 3-5 PM", "Friday 2-4 PM"],
-    rating: 4.8,
-  },
-  {
-    id: "mentor2",
-    name: "Prof. Sabbir Hasan",
-    expertise: "Data Structures & Algorithms",
-    availability: ["Tuesday 5-7 PM", "Thursday 4-6 PM"],
-    rating: 4.9,
-  },
-  {
-    id: "mentor3",
-    name: "Nafisa Rahman",
-    expertise: "Database & Backend",
-    availability: ["Monday 6-8 PM", "Saturday 2-4 PM"],
-    rating: 4.7,
-  },
-];
+import { fetchMentors } from "../services/mentorService";
+import {
+  createAppointment,
+  fetchAppointments,
+  updateAppointmentStatus,
+} from "../services/appointmentService";
 
 export default function AppointmentSchedulerPage({ role }) {
   const [appointments, setAppointments] = useState([]);
-  const [mentors, setMentors] = useState(MOCK_MENTORS);
+  const [mentors, setMentors] = useState([]);
   const [selectedMentor, setSelectedMentor] = useState(null);
   const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
   const [bookingDetails, setBookingDetails] = useState({
@@ -45,19 +26,35 @@ export default function AppointmentSchedulerPage({ role }) {
   const [isLoading, setIsLoading] = useState(true);
   const { user } = useAuth();
 
-  // Load appointments from localStorage
   useEffect(() => {
-    const savedAppointments = localStorage.getItem("appointments");
-    if (savedAppointments) {
-      setAppointments(JSON.parse(savedAppointments));
-    }
-    setIsLoading(false);
-  }, []);
+    const loadData = async () => {
+      try {
+        const [mentorsResponse, appointmentsResponse] = await Promise.all([
+          fetchMentors(),
+          fetchAppointments({ limit: 100 }),
+        ]);
 
-  const saveAppointments = (updatedAppointments) => {
-    localStorage.setItem("appointments", JSON.stringify(updatedAppointments));
-    setAppointments(updatedAppointments);
-  };
+        setMentors(
+          (mentorsResponse || []).map((mentor) => ({
+            id: mentor._id || mentor.id,
+            name: mentor.fullName,
+            expertise:
+              (mentor.expertise || []).join(", ") || "General mentorship",
+            availability: ["Select date and time in booking form"],
+            rating: mentor.rating || 0,
+          })),
+        );
+        setAppointments(appointmentsResponse || []);
+      } catch {
+        setMentors([]);
+        setAppointments([]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadData();
+  }, []);
 
   const handleBooking = async (e) => {
     e.preventDefault();
@@ -67,21 +64,23 @@ export default function AppointmentSchedulerPage({ role }) {
       return;
     }
 
-    const newAppointment = {
-      id: Date.now().toString(),
-      mentorId: selectedMentor.id,
-      mentorName: selectedMentor.name,
-      studentId: user?.uid,
-      studentName: user?.displayName || user?.email?.split("@")[0],
-      date: bookingDetails.date,
-      time: bookingDetails.time,
-      topic: bookingDetails.topic,
-      status: "pending",
-      createdAt: new Date().toISOString(),
-    };
+    try {
+      const scheduledAt = new Date(
+        `${bookingDetails.date}T${bookingDetails.time}:00`,
+      ).toISOString();
 
-    const updatedAppointments = [newAppointment, ...appointments];
-    saveAppointments(updatedAppointments);
+      const created = await createAppointment({
+        mentorId: selectedMentor.id,
+        topic: bookingDetails.topic,
+        scheduledAt,
+        durationMinutes: 60,
+      });
+
+      setAppointments((prev) => [created, ...prev]);
+    } catch {
+      alert("Unable to create appointment right now.");
+      return;
+    }
 
     setIsBookingModalOpen(false);
     setSelectedMentor(null);
@@ -92,26 +91,33 @@ export default function AppointmentSchedulerPage({ role }) {
 
   const handleCancelAppointment = async (appointmentId) => {
     if (window.confirm("Cancel this appointment?")) {
-      const updatedAppointments = appointments.filter(
-        (a) => a.id !== appointmentId,
-      );
-      saveAppointments(updatedAppointments);
+      try {
+        const updated = await updateAppointmentStatus(appointmentId, {
+          status: "cancelled",
+        });
+        setAppointments((prev) =>
+          prev.map((item) => (item._id === updated._id ? updated : item)),
+        );
+      } catch {
+        alert("Unable to cancel appointment.");
+      }
     }
   };
 
   const handleApproveAppointment = async (appointmentId) => {
-    const updatedAppointments = appointments.map((a) =>
-      a.id === appointmentId ? { ...a, status: "confirmed" } : a,
-    );
-    saveAppointments(updatedAppointments);
+    try {
+      const updated = await updateAppointmentStatus(appointmentId, {
+        status: "confirmed",
+      });
+      setAppointments((prev) =>
+        prev.map((item) => (item._id === updated._id ? updated : item)),
+      );
+    } catch {
+      alert("Unable to approve appointment.");
+    }
   };
 
   const getAppointmentsForRole = () => {
-    if (role === "student") {
-      return appointments.filter((a) => a.studentId === user?.uid);
-    } else if (role === "mentor") {
-      return appointments.filter((a) => a.mentorId === user?.uid);
-    }
     return appointments;
   };
 
@@ -131,7 +137,9 @@ export default function AppointmentSchedulerPage({ role }) {
   };
 
   const formatDateTime = (date, time) => {
-    return `${new Date(date).toLocaleDateString()} at ${time}`;
+    if (date && time)
+      return `${new Date(date).toLocaleDateString()} at ${time}`;
+    return new Date(date).toLocaleString();
   };
 
   return (
@@ -290,14 +298,17 @@ export default function AppointmentSchedulerPage({ role }) {
                         <div>
                           <p className="font-semibold">
                             {role === "student"
-                              ? appointment.mentorName
-                              : appointment.studentName}
+                              ? appointment.mentor?.fullName
+                              : appointment.student?.fullName}
                           </p>
                           <p className="text-small text-neutral">
                             Topic: {appointment.topic}
                           </p>
                           <p className="text-small text-neutral mt-1">
-                            {formatDateTime(appointment.date, appointment.time)}
+                            {formatDateTime(
+                              appointment.scheduledAt,
+                              appointment.time,
+                            )}
                           </p>
                         </div>
                         {getStatusBadge(appointment.status)}
@@ -329,7 +340,14 @@ export default function AppointmentSchedulerPage({ role }) {
                         <Button
                           size="sm"
                           variant="primary"
-                          className="w-full mt-3">
+                          className="w-full mt-3"
+                          onClick={() =>
+                            window.open(
+                              appointment.meetingLink ||
+                                `http://localhost:5173/${role}/video-call?appointmentId=${appointment._id}`,
+                              "_blank",
+                            )
+                          }>
                           Join Video Call
                         </Button>
                       )}

@@ -7,8 +7,16 @@ export default function InputField({
   className,
   hint,
   required,
+  options,
   ...props
 }) {
+  const baseClassName = cn(
+    "w-full rounded-card border bg-white px-4 py-3 text-body text-gray-800 outline-none transition",
+    error
+      ? "border-red-500 focus:border-red-500 focus:ring-2 focus:ring-red-100"
+      : "border-border focus:border-primary-light focus:ring-2 focus:ring-blue-100",
+  );
+
   return (
     <div className={cn("space-y-2", className)}>
       {label ? (
@@ -17,16 +25,17 @@ export default function InputField({
           {required ? <span className="text-accent"> *</span> : null}
         </label>
       ) : null}
-      <input
-        className={cn(
-          "w-full rounded-card border bg-white px-4 py-3 text-body text-gray-800 outline-none transition",
-          error
-            ? "border-red-500 focus:border-red-500 focus:ring-2 focus:ring-red-100"
-            : "border-border focus:border-primary-light focus:ring-2 focus:ring-blue-100",
-        )}
-        id={id}
-        {...props}
-      />
+      {Array.isArray(options) ? (
+        <select className={baseClassName} id={id} {...props}>
+          {options.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+      ) : (
+        <input className={baseClassName} id={id} {...props} />
+      )}
       {error ? (
         <p className="text-small text-red-600">{error}</p>
       ) : hint ? (

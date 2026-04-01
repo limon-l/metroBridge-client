@@ -6,7 +6,6 @@ import Dropdown from "../components/ui/Dropdown";
 import InputField from "../components/ui/InputField";
 import { useAuth } from "../hooks/useAuth";
 import { useToast } from "../hooks/useToast";
-import { getFirebaseAuthErrorMessage } from "../utils/firebaseAuthError";
 import { batches, departments } from "../utils/constants";
 
 const initialState = {
@@ -16,6 +15,22 @@ const initialState = {
   batch: "57",
   email: "",
   password: "",
+};
+
+const getEmailsFromEnv = (envValue) =>
+  (envValue || "")
+    .split(",")
+    .map((item) => item.trim().toLowerCase())
+    .filter(Boolean);
+
+const resolveSignupRole = (email) => {
+  const adminEmails = getEmailsFromEnv(import.meta.env.VITE_ADMIN_EMAILS);
+  const mentorEmails = getEmailsFromEnv(import.meta.env.VITE_MENTOR_EMAILS);
+  const normalized = String(email || "").toLowerCase();
+
+  if (adminEmails.includes(normalized)) return "admin";
+  if (mentorEmails.includes(normalized)) return "mentor";
+  return "student";
 };
 
 export default function SignupPage() {
@@ -41,10 +56,14 @@ export default function SignupPage() {
 
     setIsSubmitting(true);
     try {
+      const resolvedRole = resolveSignupRole(form.email.trim());
+
       await signup({
         email: form.email.trim(),
         password: form.password,
         fullName: form.fullName,
+        department: form.department,
+        role: resolvedRole,
       });
 
       showToast("Account created successfully.");
@@ -53,10 +72,7 @@ export default function SignupPage() {
       navigate("/student");
     } catch (error) {
       showToast(
-        getFirebaseAuthErrorMessage(
-          error,
-          "Unable to create account right now.",
-        ),
+        error?.message || "Unable to create account right now.",
         "error",
       );
     } finally {

@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import MetricCard from "../components/dashboard/MetricCard";
 import Badge from "../components/ui/Badge";
@@ -11,38 +12,49 @@ import {
   faBookOpen,
   faCalendarCheck,
   faComments,
-  faEnvelope,
 } from "@fortawesome/free-solid-svg-icons";
-
-const sessions = [
-  {
-    id: 1,
-    mentor: "Nafisa Rahman",
-    course: "Data Structures",
-    time: "Tomorrow, 4:00 PM",
-  },
-  {
-    id: 2,
-    mentor: "Sabbir Ahmed",
-    course: "Circuit Theory",
-    time: "Friday, 2:30 PM",
-  },
-];
-
-const resources = [
-  "Structured Programming Notes",
-  "Career Guidance Handbook",
-  "Semester Planner Template",
-];
+import { fetchOverviewStats } from "../services/statsService";
+import { fetchAppointments } from "../services/appointmentService";
+import { fetchDocuments } from "../services/documentService";
 
 export default function StudentDashboardPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [stats, setStats] = useState(null);
+  const [upcomingSessions, setUpcomingSessions] = useState([]);
+  const [recentResources, setRecentResources] = useState([]);
 
   const studentName =
     user?.displayName ||
     user?.email?.split("@")[0]?.replace(/[._-]+/g, " ") ||
     "Student";
+
+  useEffect(() => {
+    const loadDashboard = async () => {
+      try {
+        const [overview, appointments, documents] = await Promise.all([
+          fetchOverviewStats(),
+          fetchAppointments({ limit: 4 }),
+          fetchDocuments({ limit: 3 }),
+        ]);
+
+        setStats(overview);
+
+        const sortedAppointments = [...appointments]
+          .filter((item) => new Date(item.scheduledAt) >= new Date())
+          .sort((a, b) => new Date(a.scheduledAt) - new Date(b.scheduledAt));
+        setUpcomingSessions(sortedAppointments.slice(0, 3));
+
+        setRecentResources(documents.slice(0, 3));
+      } catch {
+        setStats(null);
+        setUpcomingSessions([]);
+        setRecentResources([]);
+      }
+    };
+
+    loadDashboard();
+  }, []);
 
   const quickActions = [
     {
@@ -50,12 +62,6 @@ export default function StudentDashboardPage() {
       title: "Community Feed",
       description: "Share and discuss with mentors",
       onClick: () => navigate("/student/feed"),
-    },
-    {
-      icon: faEnvelope,
-      title: "Messages",
-      description: "Chat with mentors",
-      onClick: () => navigate("/student/messages"),
     },
     {
       icon: faCalendarCheck,
@@ -114,22 +120,22 @@ export default function StudentDashboardPage() {
         <MetricCard
           subtitle="Available for booking"
           title="Upcoming sessions"
-          value="04"
+          value={String(stats?.sessions?.upcoming ?? 0).padStart(2, "0")}
         />
         <MetricCard
           subtitle="Matched to your courses"
           title="Recommended mentors"
-          value="12"
+          value={String(stats?.mentors ?? 0).padStart(2, "0")}
         />
         <MetricCard
           subtitle="Download and review"
           title="Recent resources"
-          value="08"
+          value={String(stats?.documents ?? 0).padStart(2, "0")}
         />
         <MetricCard
           subtitle="Spend on sessions"
-          title="Credit balance"
-          value="220"
+          title="Messages"
+          value={String(stats?.messages ?? 0).padStart(2, "0")}
         />
       </section>
 
@@ -137,31 +143,45 @@ export default function StudentDashboardPage() {
         <Card>
           <h3>Upcoming sessions</h3>
           <div className="mt-4 space-y-3">
-            {sessions.map((session) => (
-              <div
-                key={session.id}
-                className="rounded-card border border-border p-4">
-                <p className="font-semibold text-primary">{session.course}</p>
-                <p className="text-small text-neutral">
-                  Mentor: {session.mentor}
-                </p>
-                <p className="text-small text-neutral">{session.time}</p>
-              </div>
-            ))}
+            {upcomingSessions.length === 0 ? (
+              <p className="text-small text-neutral">
+                No upcoming sessions found.
+              </p>
+            ) : (
+              upcomingSessions.map((session) => (
+                <div
+                  key={session._id}
+                  className="rounded-card border border-border p-4">
+                  <p className="font-semibold text-primary">{session.topic}</p>
+                  <p className="text-small text-neutral">
+                    Mentor: {session.mentor?.fullName || "TBD"}
+                  </p>
+                  <p className="text-small text-neutral">
+                    {new Date(session.scheduledAt).toLocaleString()}
+                  </p>
+                </div>
+              ))
+            )}
           </div>
         </Card>
 
         <Card>
           <h3>Recent resources</h3>
           <div className="mt-4 space-y-3">
-            {resources.map((resource) => (
-              <div
-                key={resource}
-                className="flex items-center justify-between rounded-card border border-border p-3">
-                <p className="text-small text-gray-700">{resource}</p>
-                <Badge variant="success">New</Badge>
-              </div>
-            ))}
+            {recentResources.length === 0 ? (
+              <p className="text-small text-neutral">
+                No resources uploaded yet.
+              </p>
+            ) : (
+              recentResources.map((resource) => (
+                <div
+                  key={resource.id}
+                  className="flex items-center justify-between rounded-card border border-border p-3">
+                  <p className="text-small text-gray-700">{resource.title}</p>
+                  <Badge variant="success">New</Badge>
+                </div>
+              ))
+            )}
           </div>
         </Card>
       </section>

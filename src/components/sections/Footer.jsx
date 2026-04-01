@@ -51,14 +51,14 @@ export default function Footer() {
             <ul className="mt-4 space-y-2">
               <li>
                 <Link
-                  to="/login"
+                  to="/student-login"
                   className="text-small text-neutral transition-colors hover:text-primary">
                   Sign In
                 </Link>
               </li>
               <li>
                 <Link
-                  to="/signup"
+                  to="/student-signup"
                   className="text-small text-neutral transition-colors hover:text-primary">
                   Sign Up
                 </Link>

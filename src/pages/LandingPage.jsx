@@ -41,12 +41,12 @@ export default function LandingPage() {
               platform for freshers, seniors, alumni, and university moderators.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
-              <Link to="/signup">
+              <Link to="/student-signup">
                 <Button size="lg" variant="cta">
                   Get Started
                 </Button>
               </Link>
-              <Link to="/login">
+              <Link to="/student-login">
                 <Button size="lg" variant="secondary">
                   Sign In
                 </Button>
@@ -159,7 +159,7 @@ export default function LandingPage() {
             Metropolitan University.
           </p>
           <div className="mt-6 flex flex-wrap justify-center gap-3">
-            <Link to="/signup">
+            <Link to="/student-signup">
               <Button size="lg" variant="cta">
                 Create Free Account
               </Button>

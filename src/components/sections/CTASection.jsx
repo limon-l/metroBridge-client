@@ -12,9 +12,9 @@ export default function CTASection() {
           generation, MetroBridge makes it simple.
         </p>
         <div className="mt-8 flex flex-wrap justify-center gap-4">
-          <Link to="/signup">
+          <Link to="/student-signup">
             <Button size="lg" variant="cta">
-              Get Started Free
+              Start your journey
             </Button>
           </Link>
           <Link to="/contact">

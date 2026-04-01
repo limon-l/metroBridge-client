@@ -1,33 +1,13 @@
-import {
-  createUserWithEmailAndPassword,
-  onAuthStateChanged,
-  signInWithEmailAndPassword,
-  signOut,
-  updateProfile,
-} from "firebase/auth";
 import { useEffect, useMemo, useState } from "react";
 import { AuthContext } from "./authContextObject";
-import { auth } from "../services/firebase";
+import {
+  getCurrentUser,
+  loginWithBackend,
+  signupWithBackend,
+} from "../services/authService";
 
-const getEmailsFromEnv = (envValue) => {
-  if (!envValue) return [];
-  return envValue
-    .split(",")
-    .map((item) => item.trim().toLowerCase())
-    .filter(Boolean);
-};
-
-const resolveRoleFromEmail = (email) => {
-  if (!email) return "student";
-
-  const emailLower = email.toLowerCase();
-  const adminEmails = getEmailsFromEnv(import.meta.env.VITE_ADMIN_EMAILS);
-  const mentorEmails = getEmailsFromEnv(import.meta.env.VITE_MENTOR_EMAILS);
-
-  if (adminEmails.includes(emailLower)) return "admin";
-  if (mentorEmails.includes(emailLower)) return "mentor";
-  return "student";
-};
+const TOKEN_KEY = "metrobridge_token";
+const AUTH_CACHE_KEY = "metrobridge_auth";
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
@@ -35,36 +15,80 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
-      setUser(firebaseUser);
-      setRole(resolveRoleFromEmail(firebaseUser?.email));
-      setLoading(false);
-    });
+    const restore = async () => {
+      const token = localStorage.getItem(TOKEN_KEY);
+      const cached = localStorage.getItem(AUTH_CACHE_KEY);
 
-    return unsubscribe;
+      if (!token) {
+        setLoading(false);
+        return;
+      }
+
+      if (cached) {
+        try {
+          const parsed = JSON.parse(cached);
+          setUser(parsed.user || null);
+          setRole(parsed.role || "student");
+        } catch {
+          localStorage.removeItem(AUTH_CACHE_KEY);
+        }
+      }
+
+      try {
+        const currentUser = await getCurrentUser();
+        setUser(currentUser);
+        setRole(currentUser.role || "student");
+        localStorage.setItem(
+          AUTH_CACHE_KEY,
+          JSON.stringify({
+            user: currentUser,
+            role: currentUser.role || "student",
+          }),
+        );
+      } catch {
+        localStorage.removeItem(TOKEN_KEY);
+        localStorage.removeItem(AUTH_CACHE_KEY);
+        setUser(null);
+        setRole("student");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    restore();
+
+    return () => {
+      setLoading(false);
+    };
   }, []);
 
-  const signup = async ({ email, password, fullName }) => {
-    const credential = await createUserWithEmailAndPassword(
-      auth,
-      email,
-      password,
+  const applyAuthState = ({ token, user: userData }) => {
+    localStorage.setItem(TOKEN_KEY, token);
+    localStorage.setItem(
+      AUTH_CACHE_KEY,
+      JSON.stringify({ user: userData, role: userData.role || "student" }),
     );
+    setUser(userData);
+    setRole(userData.role || "student");
+  };
 
-    if (fullName) {
-      await updateProfile(credential.user, { displayName: fullName });
-    }
-
-    return credential.user;
+  const signup = async (payload) => {
+    const authResult = await signupWithBackend(payload);
+    applyAuthState(authResult);
+    return authResult.user;
   };
 
   const login = async ({ email, password }) => {
-    const credential = await signInWithEmailAndPassword(auth, email, password);
-    return credential.user;
+    const authResult = await loginWithBackend({ email, password });
+    applyAuthState(authResult);
+    return authResult.user;
   };
 
   const logout = async () => {
-    await signOut(auth);
+    localStorage.removeItem(TOKEN_KEY);
+    localStorage.removeItem(AUTH_CACHE_KEY);
+    setUser(null);
+    setRole("student");
   };
 
   const value = useMemo(

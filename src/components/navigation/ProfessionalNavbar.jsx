@@ -83,7 +83,7 @@ export default function ProfessionalNavbar() {
               to="/admin-login">
               Admin
             </Link>
-            <Link to="/login">
+            <Link to="/student-login">
               <Button
                 className="border-primary text-primary hover:bg-primary/5"
                 size="sm"
@@ -91,7 +91,7 @@ export default function ProfessionalNavbar() {
                 Login
               </Button>
             </Link>
-            <Link to="/signup">
+            <Link to="/student-signup">
               <Button size="sm" variant="cta">
                 Join Now
               </Button>

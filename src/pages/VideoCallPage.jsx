@@ -1,8 +1,35 @@
+import { useEffect, useState } from "react";
 import Badge from "../components/ui/Badge";
 import Button from "../components/ui/Button";
 import Card from "../components/ui/Card";
+import { fetchAppointments } from "../services/appointmentService";
 
 export default function VideoCallPage() {
+  const [sessions, setSessions] = useState([]);
+
+  useEffect(() => {
+    const loadSessions = async () => {
+      try {
+        const items = await fetchAppointments({
+          status: "confirmed",
+          limit: 10,
+        });
+        const nextSessions = (items || [])
+          .filter((session) => new Date(session.scheduledAt) >= new Date())
+          .sort((a, b) => new Date(a.scheduledAt) - new Date(b.scheduledAt));
+        setSessions(nextSessions);
+      } catch {
+        setSessions([]);
+      }
+    };
+
+    loadSessions();
+  }, []);
+
+  const nextSession = sessions[0];
+  const joinLink =
+    nextSession?.meetingLink || "https://meet.jit.si/metrobridge-room";
+
   return (
     <div className="rounded-card bg-primary-dark p-4 text-white shadow-soft sm:p-6">
       <div className="grid gap-4 lg:grid-cols-[2fr_320px]">
@@ -15,6 +42,11 @@ export default function VideoCallPage() {
           </div>
           <Card className="bg-[#100e28] p-3">
             <div className="flex flex-wrap items-center justify-center gap-3">
+              <Badge variant="success">
+                {nextSession
+                  ? `Next: ${new Date(nextSession.scheduledAt).toLocaleString()}`
+                  : "No confirmed session"}
+              </Badge>
               <Button size="sm" variant="secondary">
                 Mic
               </Button>
@@ -24,6 +56,11 @@ export default function VideoCallPage() {
               <Button size="sm" variant="secondary">
                 Screen Share
               </Button>
+              <a href={joinLink} rel="noreferrer" target="_blank">
+                <Button size="sm" variant="primary">
+                  Join Room
+                </Button>
+              </a>
               <Button size="sm" variant="danger">
                 End Call
               </Button>

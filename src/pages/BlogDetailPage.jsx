@@ -258,7 +258,7 @@ export default function BlogDetailPage() {
               growth.
             </p>
             <div className="mt-6 flex flex-wrap justify-center gap-3">
-              <Link to="/signup">
+              <Link to="/student-signup">
                 <Button variant="cta">Get Started</Button>
               </Link>
               <Link to="/blog">

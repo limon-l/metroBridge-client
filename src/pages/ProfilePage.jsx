@@ -1,16 +1,17 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Badge from "../components/ui/Badge";
 import Button from "../components/ui/Button";
 import Card from "../components/ui/Card";
 import InputField from "../components/ui/InputField";
 import { useAuth } from "../hooks/useAuth";
 import { useToast } from "../hooks/useToast";
+import apiClient from "../services/apiClient";
 
 export default function ProfilePage() {
   const { user } = useAuth();
   const [profile, setProfile] = useState({
     fullName: user?.displayName || "",
-    studentId: "",
+    universityId: "",
     department: "",
     batch: "",
     section: "",
@@ -27,13 +28,15 @@ export default function ProfilePage() {
     guardianPhone: "",
     bio: "",
   });
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
   const [photoPreview, setPhotoPreview] = useState("");
   const { showToast } = useToast();
 
   const onChange = (field) => (event) =>
     setProfile((prev) => ({ ...prev, [field]: event.target.value }));
 
-  const formatStudentId = (value) => {
+  const formatUniversityId = (value) => {
     const digits = value.replace(/\D/g, "").slice(0, 9);
     const parts = [
       digits.slice(0, 3),
@@ -43,12 +46,48 @@ export default function ProfilePage() {
     return parts.join("-");
   };
 
-  const onStudentIdChange = (event) => {
+  const onUniversityIdChange = (event) => {
     setProfile((prev) => ({
       ...prev,
-      studentId: formatStudentId(event.target.value),
+      universityId: formatUniversityId(event.target.value),
     }));
   };
+
+  useEffect(() => {
+    const loadProfile = async () => {
+      try {
+        const response = await apiClient.get("/users/me");
+        const data = response.data?.data || {};
+        setProfile({
+          fullName: data.fullName || "",
+          universityId: data.universityId || "",
+          department: data.department || "",
+          batch: data.batch || "",
+          section: data.section || "",
+          shift: data.shift || "",
+          email: data.email || user?.email || "",
+          phone: data.phone || "",
+          dateOfBirth: data.dateOfBirth
+            ? new Date(data.dateOfBirth).toISOString().slice(0, 10)
+            : "",
+          bloodGroup: data.bloodGroup || "",
+          gender: data.gender || "",
+          homeAddress: data.homeAddress || "",
+          emergencyContactName: data.emergencyContactName || "",
+          emergencyContactPhone: data.emergencyContactPhone || "",
+          guardianName: data.guardianName || "",
+          guardianPhone: data.guardianPhone || "",
+          bio: data.bio || "",
+        });
+      } catch {
+        showToast("Failed to load profile data.", "error");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadProfile();
+  }, [showToast, user?.email]);
 
   const studentName = useMemo(
     () => profile.fullName || "Student Name",
@@ -66,16 +105,42 @@ export default function ProfilePage() {
     reader.readAsDataURL(file);
   };
 
-  const onSubmit = (event) => {
+  const onSubmit = async (event) => {
     event.preventDefault();
 
-    if (!/^\d{3}-\d{3}-\d{3}$/.test(profile.studentId)) {
-      showToast("Student ID must be 9 digits in this format: 231-115-218");
-      return;
+    setIsSaving(true);
+    try {
+      const payload = {
+        fullName: profile.fullName,
+        department: profile.department,
+        batch: profile.batch,
+        section: profile.section,
+        shift: profile.shift,
+        dateOfBirth: profile.dateOfBirth || null,
+        bloodGroup: profile.bloodGroup,
+        gender: profile.gender,
+        emergencyContactName: profile.emergencyContactName,
+        emergencyContactPhone: profile.emergencyContactPhone,
+        guardianName: profile.guardianName,
+        guardianPhone: profile.guardianPhone,
+        bio: profile.bio,
+      };
+      await apiClient.patch("/users/me", payload);
+      showToast("Profile updated successfully.");
+    } catch (error) {
+      showToast(error?.message || "Failed to update profile.", "error");
+    } finally {
+      setIsSaving(false);
     }
-
-    showToast("Profile updated successfully.");
   };
+
+  if (isLoading) {
+    return (
+      <Card>
+        <p className="text-neutral">Loading profile...</p>
+      </Card>
+    );
+  }
 
   return (
     <form className="space-y-6" onSubmit={onSubmit}>
@@ -140,17 +205,19 @@ export default function ProfilePage() {
             />
             <InputField
               hint="Format: XXX-XXX-XXX"
-              label="Student ID"
+              label="University ID"
               maxLength={11}
-              onChange={onStudentIdChange}
+              onChange={onUniversityIdChange}
               pattern="\\d{3}-\\d{3}-\\d{3}"
               required
-              value={profile.studentId}
+              readOnly
+              value={profile.universityId}
             />
             <InputField
               label="Email"
               onChange={onChange("email")}
               required
+              readOnly
               type="email"
               value={profile.email}
             />
@@ -158,6 +225,7 @@ export default function ProfilePage() {
               label="Phone Number"
               onChange={onChange("phone")}
               required
+              readOnly
               value={profile.phone}
             />
             <InputField
@@ -279,6 +347,7 @@ export default function ProfilePage() {
                 onChange={onChange("homeAddress")}
                 placeholder="Village/Road, Area, District"
                 required
+                readOnly
                 value={profile.homeAddress}
               />
             </div>
@@ -355,8 +424,8 @@ export default function ProfilePage() {
         </Card>
       </div>
 
-      <Button type="submit" variant="primary">
-        Save Changes
+      <Button disabled={isSaving} type="submit" variant="primary">
+        {isSaving ? "Saving..." : "Save Changes"}
       </Button>
     </form>
   );

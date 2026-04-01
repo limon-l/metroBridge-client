@@ -16,16 +16,20 @@ import CourseDetailPage from "./pages/CourseDetailPage";
 import CourseLibraryPage from "./pages/CourseLibraryPage";
 import DocumentLibraryPage from "./pages/DocumentLibraryPage";
 import FAQPage from "./pages/FAQPage";
+import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 import LandingPage from "./pages/LandingPage";
-import LoginPage from "./pages/LoginPage";
 import MentorDashboardPage from "./pages/MentorDashboardPage";
+import MentorLoginPage from "./pages/MentorLoginPage";
 import MentorSearchPage from "./pages/MentorSearchPage";
+import MentorSignupPage from "./pages/MentorSignupPage";
 import MessagesPage from "./pages/MessagesPage";
 import ModerationPage from "./pages/ModerationPage";
 import NotFoundPage from "./pages/NotFoundPage";
 import ProfilePage from "./pages/ProfilePage";
-import SignupPage from "./pages/SignupPage";
 import StudentDashboardPage from "./pages/StudentDashboardPage";
+import StudentLoginPage from "./pages/StudentLoginPage";
+import StudentSignupPage from "./pages/StudentSignupPage";
+import ResetPasswordPage from "./pages/ResetPasswordPage";
 import VideoCallPage from "./pages/VideoCallPage";
 
 function App() {
@@ -35,9 +39,21 @@ function App() {
         <Routes>
           <Route element={<PublicLayout />}>
             <Route index element={<LandingPage />} />
-            <Route path="login" element={<LoginPage />} />
+            <Route
+              path="login"
+              element={<Navigate to="/student-login" replace />}
+            />
+            <Route path="student-login" element={<StudentLoginPage />} />
+            <Route path="mentor-login" element={<MentorLoginPage />} />
             <Route path="admin-login" element={<AdminLoginPage />} />
-            <Route path="signup" element={<SignupPage />} />
+            <Route path="forgot-password" element={<ForgotPasswordPage />} />
+            <Route path="reset-password" element={<ResetPasswordPage />} />
+            <Route
+              path="signup"
+              element={<Navigate to="/student-signup" replace />}
+            />
+            <Route path="student-signup" element={<StudentSignupPage />} />
+            <Route path="mentor-signup" element={<MentorSignupPage />} />
             <Route path="contact" element={<ContactPage />} />
             <Route path="blog" element={<BlogPage />} />
             <Route path="blog/:id" element={<BlogDetailPage />} />
@@ -53,7 +69,6 @@ function App() {
             }>
             <Route index element={<StudentDashboardPage />} />
             <Route path="feed" element={<CommunityFeedPage role="student" />} />
-            <Route path="messages" element={<MessagesPage role="student" />} />
             <Route
               path="appointments"
               element={<AppointmentSchedulerPage role="student" />}
@@ -89,6 +104,7 @@ function App() {
               path="documents"
               element={<DocumentLibraryPage role="mentor" />}
             />
+            <Route path="video-call" element={<VideoCallPage />} />
             <Route path="profile" element={<ProfilePage />} />
             <Route path="moderation" element={<ModerationPage />} />
           </Route>
@@ -111,6 +127,7 @@ function App() {
               path="documents"
               element={<DocumentLibraryPage role="admin" />}
             />
+            <Route path="video-call" element={<VideoCallPage />} />
             <Route path="moderation" element={<ModerationPage />} />
             <Route path="profile" element={<ProfilePage />} />
           </Route>
