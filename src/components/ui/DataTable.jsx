@@ -19,7 +19,7 @@ export default function DataTable({ columns, rows }) {
           {rows.map((row, rowIndex) => (
             <tr
               key={`${rowIndex}-${row.id ?? "row"}`}
-              className="border-b border-border last:border-b-0">
+              className="border-b border-border transition-colors duration-200 hover:bg-slate-50/80 last:border-b-0">
               {columns.map((column) => (
                 <td
                   key={column.key}

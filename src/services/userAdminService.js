@@ -19,3 +19,10 @@ export async function fetchUserDetails(userId) {
   const response = await apiClient.get(`/users/${userId}`);
   return response.data?.data;
 }
+
+export async function fetchApprovedUsers(filters = {}) {
+  const response = await apiClient.get("/users/approved", {
+    params: filters,
+  });
+  return response.data?.data || [];
+}

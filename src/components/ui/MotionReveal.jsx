@@ -15,6 +15,11 @@ export default function MotionReveal({
     const node = ref.current;
     if (!node) return;
 
+    if (typeof IntersectionObserver === "undefined") {
+      setIsVisible(true);
+      return;
+    }
+
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {

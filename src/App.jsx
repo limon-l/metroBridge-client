@@ -12,6 +12,8 @@ import BlogPage from "./pages/BlogPage";
 import BookingPage from "./pages/BookingPage";
 import ContactPage from "./pages/ContactPage";
 import CommunityFeedPage from "./pages/CommunityFeedPage";
+import ConnectionMemberProfilePage from "./pages/ConnectionMemberProfilePage";
+import ConnectionsPage from "./pages/ConnectionsPage";
 import CourseDetailPage from "./pages/CourseDetailPage";
 import CourseLibraryPage from "./pages/CourseLibraryPage";
 import DocumentLibraryPage from "./pages/DocumentLibraryPage";
@@ -79,6 +81,12 @@ function App() {
             />
             <Route path="mentors" element={<MentorSearchPage />} />
             <Route path="booking" element={<BookingPage />} />
+            <Route path="connections" element={<ConnectionsPage />} />
+            <Route
+              path="connections/:memberId"
+              element={<ConnectionMemberProfilePage />}
+            />
+            <Route path="messages" element={<MessagesPage role="student" />} />
             <Route path="video-call" element={<VideoCallPage />} />
             <Route path="library" element={<CourseLibraryPage />} />
             <Route path="library/:courseId" element={<CourseDetailPage />} />
@@ -95,6 +103,11 @@ function App() {
             }>
             <Route index element={<MentorDashboardPage />} />
             <Route path="feed" element={<CommunityFeedPage role="mentor" />} />
+            <Route path="connections" element={<ConnectionsPage />} />
+            <Route
+              path="connections/:memberId"
+              element={<ConnectionMemberProfilePage />}
+            />
             <Route path="messages" element={<MessagesPage role="mentor" />} />
             <Route
               path="appointments"
@@ -118,6 +131,11 @@ function App() {
             }>
             <Route index element={<AdminDashboardPage />} />
             <Route path="feed" element={<CommunityFeedPage role="admin" />} />
+            <Route path="connections" element={<ConnectionsPage />} />
+            <Route
+              path="connections/:memberId"
+              element={<ConnectionMemberProfilePage />}
+            />
             <Route path="messages" element={<MessagesPage role="admin" />} />
             <Route
               path="appointments"

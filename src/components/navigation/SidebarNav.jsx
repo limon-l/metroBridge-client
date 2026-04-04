@@ -8,6 +8,8 @@ const roleLinks = {
     { label: "Appointments", to: "/student/appointments" },
     { label: "Documents", to: "/student/documents" },
     { label: "Mentor Search", to: "/student/mentors" },
+    { label: "Connections", to: "/student/connections" },
+    { label: "Messages", to: "/student/messages" },
     { label: "Booking", to: "/student/booking" },
     { label: "Video Call", to: "/student/video-call" },
     { label: "Course Library", to: "/student/library" },
@@ -16,6 +18,7 @@ const roleLinks = {
   mentor: [
     { label: "Dashboard", to: "/mentor" },
     { label: "Community Feed", to: "/mentor/feed" },
+    { label: "Connections", to: "/mentor/connections" },
     { label: "Messages", to: "/mentor/messages" },
     { label: "Appointments", to: "/mentor/appointments" },
     { label: "Documents", to: "/mentor/documents" },
@@ -24,6 +27,7 @@ const roleLinks = {
   admin: [
     { label: "Dashboard", to: "/admin" },
     { label: "Community Feed", to: "/admin/feed" },
+    { label: "Connections", to: "/admin/connections" },
     { label: "Messages", to: "/admin/messages" },
     { label: "Appointments", to: "/admin/appointments" },
     { label: "Documents", to: "/admin/documents" },

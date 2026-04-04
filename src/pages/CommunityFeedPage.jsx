@@ -1,10 +1,12 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import Card from "../components/ui/Card";
 import Button from "../components/ui/Button";
 import PostCard from "../components/feed/PostCard";
 import CreatePostModal from "../components/feed/CreatePostModal";
 import EmptyState from "../components/ui/EmptyState";
 import { useAuth } from "../hooks/useAuth";
+import { useToast } from "../hooks/useToast";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faCamera,
@@ -14,19 +16,21 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 
 export default function FeedPage({ role }) {
-  const [posts, setPosts] = useState([]);
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  const { user } = useAuth();
-
-  // Load posts from localStorage (mock data for now)
-  useEffect(() => {
-    const savedPosts = localStorage.getItem("posts");
-    if (savedPosts) {
-      setPosts(JSON.parse(savedPosts));
+  const navigate = useNavigate();
+  const [posts, setPosts] = useState(() => {
+    try {
+      const savedPosts = localStorage.getItem("posts");
+      return savedPosts ? JSON.parse(savedPosts) : [];
+    } catch {
+      return [];
     }
-    setIsLoading(false);
-  }, []);
+  });
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isLoading] = useState(false);
+  const { user } = useAuth();
+  const { showToast } = useToast();
+  const roleBasePath =
+    role === "mentor" ? "/mentor" : role === "admin" ? "/admin" : "/student";
 
   // Save posts to localStorage
   const savePosts = (updatedPosts) => {
@@ -152,6 +156,22 @@ export default function FeedPage({ role }) {
     savePosts(updatedPosts);
   };
 
+  const resolveAuthorId = (author) => author?.id || author?._id || author?.uid;
+
+  const isValidMongoId = (value) => /^[a-f\d]{24}$/i.test(String(value || ""));
+
+  const handleOpenProfile = (author) => {
+    const memberId = resolveAuthorId(author);
+    if (!memberId || !isValidMongoId(memberId)) {
+      showToast(
+        "Profile is unavailable for this post uploader.",
+        "error",
+      );
+      return;
+    }
+    navigate(`${roleBasePath}/connections/${memberId}`);
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -227,14 +247,31 @@ export default function FeedPage({ role }) {
                 <div className="flex items-center gap-2 text-small text-neutral mb-2 ml-4">
                   <FontAwesomeIcon icon={faRepeat} />
                   <span>
-                    {post.author?.name} shared {post.sharedPost.author?.name}'s
-                    post
+                    <button
+                      type="button"
+                      onClick={() => handleOpenProfile(post.author)}
+                      className="font-semibold text-primary underline-offset-2 hover:underline disabled:cursor-default disabled:text-neutral"
+                      disabled={!isValidMongoId(resolveAuthorId(post.author))}>
+                      {post.author?.name || "Someone"}
+                    </button>{" "}
+                    shared{" "}
+                    <button
+                      type="button"
+                      onClick={() => handleOpenProfile(post.sharedPost?.author)}
+                      className="font-semibold text-primary underline-offset-2 hover:underline disabled:cursor-default disabled:text-neutral"
+                      disabled={
+                        !isValidMongoId(resolveAuthorId(post.sharedPost?.author))
+                      }>
+                      {post.sharedPost?.author?.name || "a member"}
+                    </button>
+                    's post
                   </span>
                 </div>
               )}
 
               <PostCard
                 post={post.sharedPost || post}
+                onOpenProfile={handleOpenProfile}
                 onReact={handleReact}
                 onComment={handleComment}
                 onShare={handleShare}

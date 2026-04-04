@@ -10,12 +10,15 @@ export default function PostCard({
   onReact,
   onComment,
   onShare,
+  onOpenProfile,
 }) {
   const [isCommentOpen, setIsCommentOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { user } = useAuth();
 
   const isAuthor = user?.uid === post.author?.id;
+  const isValidMongoId = (value) => /^[a-f\d]{24}$/i.test(String(value || ""));
+  const uploaderId = post.author?.id || post.author?._id || post.author?.uid;
 
   const reactionCounts = post.reactions || {};
   const totalReactions = Object.values(reactionCounts).length || 0;
@@ -44,15 +47,21 @@ export default function PostCard({
   };
 
   return (
-    <div className="border border-border rounded-lg bg-white p-4 shadow-sm hover:shadow-md transition-shadow">
+    <article className="rounded-2xl border border-border bg-white p-4 shadow-soft transition-all duration-300 hover:-translate-y-[1px] hover:shadow-lg">
       {/* Post Header */}
       <div className="flex items-start justify-between mb-3">
         <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-full bg-primary/20 flex items-center justify-center font-semibold text-primary">
+          <div className="h-10 w-10 rounded-full bg-gradient-to-br from-primary/20 to-primary-light/20 flex items-center justify-center font-semibold text-primary">
             {(post.author?.name || "U").charAt(0).toUpperCase()}
           </div>
           <div>
-            <p className="font-semibold text-sm">{post.author?.name}</p>
+            <button
+              type="button"
+              onClick={() => onOpenProfile?.(post.author)}
+              disabled={!isValidMongoId(uploaderId)}
+              className="text-left font-semibold text-sm text-primary underline-offset-2 hover:underline disabled:cursor-default disabled:text-slate-700 disabled:no-underline">
+              {post.author?.name || "Unknown"}
+            </button>
             <p className="text-xs text-neutral">{formatDate(post.createdAt)}</p>
           </div>
         </div>
@@ -71,7 +80,7 @@ export default function PostCard({
                 className="fixed inset-0 z-10"
                 onClick={() => setIsMenuOpen(false)}
               />
-              <div className="absolute right-0 top-full mt-1 bg-white border border-border rounded-lg shadow-lg z-20 min-w-[150px]">
+              <div className="absolute right-0 top-full mt-1 min-w-[160px] rounded-xl border border-border bg-white shadow-lg z-20">
                 {isAuthor && (
                   <>
                     <button
@@ -103,7 +112,7 @@ export default function PostCard({
 
       {/* Post Content */}
       <div className="mb-3">
-        <p className="text-text mb-3">{post.content}</p>
+        <p className="text-text mb-3 leading-relaxed">{post.content}</p>
 
         {/* Media Gallery */}
         {post.media && post.media.length > 0 && (
@@ -122,7 +131,7 @@ export default function PostCard({
                 <img
                   src={media.url}
                   alt={`Post media ${index + 1}`}
-                  className="w-full h-32 sm:h-48 object-cover hover:opacity-90 transition-opacity cursor-pointer"
+                  className="h-32 w-full cursor-pointer object-cover transition-all duration-300 hover:scale-[1.02] hover:opacity-90 sm:h-48"
                 />
               </div>
             ))}
@@ -132,7 +141,7 @@ export default function PostCard({
 
       {/* Reaction Stats */}
       {totalReactions > 0 && (
-        <div className="flex items-center justify-between text-xs text-neutral border-t border-b border-border py-2 mb-3">
+        <div className="mb-3 flex items-center justify-between border-t border-b border-border py-2 text-xs text-neutral">
           <span>{totalReactions} reactions</span>
           <span>
             {post.comments?.length || 0} comments • {post.shares?.length || 0}{" "}
@@ -142,15 +151,15 @@ export default function PostCard({
       )}
 
       {/* Action Buttons */}
-      <div className="flex gap-2 mb-4 -mx-2">
+      <div className="mb-4 -mx-2 flex gap-2">
         <button
           onClick={() =>
             onReact(post.id, userReaction === "like" ? null : "like")
           }
-          className={`flex-1 py-2 px-3 rounded-lg transition-colors flex items-center justify-center gap-2 text-sm ${
+          className={`flex-1 rounded-lg px-3 py-2 text-sm transition-all duration-200 flex items-center justify-center gap-2 ${
             userReaction === "like"
               ? "bg-primary/10 text-primary font-semibold"
-              : "text-neutral hover:bg-neutral-light"
+              : "text-neutral hover:bg-neutral-light hover:text-primary"
           }`}>
           <ReactionPicker
             onReact={(reaction) =>
@@ -163,14 +172,14 @@ export default function PostCard({
 
         <button
           onClick={() => setIsCommentOpen(!isCommentOpen)}
-          className="flex-1 py-2 px-3 rounded-lg transition-colors flex items-center justify-center gap-2 text-neutral hover:bg-neutral-light text-sm">
+          className="flex-1 rounded-lg px-3 py-2 text-sm transition-all duration-200 flex items-center justify-center gap-2 text-neutral hover:bg-neutral-light hover:text-primary">
           <span>💬</span>
           <span>Comment</span>
         </button>
 
         <button
           onClick={() => onShare(post.id)}
-          className="flex-1 py-2 px-3 rounded-lg transition-colors flex items-center justify-center gap-2 text-neutral hover:bg-neutral-light text-sm">
+          className="flex-1 rounded-lg px-3 py-2 text-sm transition-all duration-200 flex items-center justify-center gap-2 text-neutral hover:bg-neutral-light hover:text-primary">
           <span>🔄</span>
           <span>Share</span>
         </button>
@@ -184,6 +193,6 @@ export default function PostCard({
           onAddComment={onComment}
         />
       )}
-    </div>
+    </article>
   );
 }
