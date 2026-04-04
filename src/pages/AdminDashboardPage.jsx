@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import MetricCard from "../components/dashboard/MetricCard";
 import Badge from "../components/ui/Badge";
 import Button from "../components/ui/Button";
@@ -37,6 +37,9 @@ const departmentFilterOptions = [
 export default function AdminDashboardPage() {
   const navigate = useNavigate();
   const { showToast } = useToast();
+
+  const getMemberProfilePath = (member) =>
+    `/admin/connections/${member._id || member.id}`;
 
   const [stats, setStats] = useState(null);
   const [pendingUsers, setPendingUsers] = useState([]);
@@ -249,7 +252,25 @@ export default function AdminDashboardPage() {
   ];
 
   const approvedColumns = [
-    { key: "fullName", header: "Name" },
+    {
+      key: "fullName",
+      header: "Name",
+      render: (row) => {
+        const memberId = row._id || row.id;
+
+        if (!memberId) {
+          return row.fullName;
+        }
+
+        return (
+          <Link
+            className="font-medium text-primary underline-offset-2 hover:underline"
+            to={getMemberProfilePath(row)}>
+            {row.fullName}
+          </Link>
+        );
+      },
+    },
     { key: "universityId", header: "ID" },
     {
       key: "role",

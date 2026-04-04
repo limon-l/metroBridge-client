@@ -36,7 +36,7 @@ const contactInfo = [
 export default function ContactPage() {
   return (
     <div>
-      <section className="bg-gradient-to-r from-primary via-primary-light to-primary-dark py-12 text-white sm:py-16">
+      <section className="banner-surface bg-gradient-to-r from-primary via-primary-light to-accent py-12 text-white sm:py-16">
         <MotionReveal className="content-container text-center" y={16}>
           <h1 className="text-h1 text-white">Contact our team</h1>
           <p className="section-subtitle-light text-body">

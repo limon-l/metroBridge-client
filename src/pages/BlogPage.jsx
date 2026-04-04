@@ -82,7 +82,7 @@ export default function BlogPage() {
   return (
     <div>
       {/* Hero Section */}
-      <section className="bg-gradient-to-r from-primary via-primary-light to-primary-dark py-16 text-white sm:py-20">
+      <section className="banner-surface bg-gradient-to-r from-primary via-primary-light to-accent py-16 text-white sm:py-20">
         <MotionReveal className="content-container text-center" y={16}>
           <h1 className="text-h1 text-white">MetroBridge Blog</h1>
           <p className="section-subtitle-light text-body">

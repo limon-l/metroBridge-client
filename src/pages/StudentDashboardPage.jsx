@@ -88,7 +88,7 @@ export default function StudentDashboardPage() {
   return (
     <div className="space-y-6">
       <MotionReveal y={14}>
-        <Card className="bg-gradient-to-r from-primary to-primary-light text-white">
+        <Card className="banner-surface bg-gradient-to-r from-primary via-primary-light to-accent text-white">
           <p className="text-small font-semibold uppercase tracking-wide text-white/80">
             Student Dashboard
           </p>

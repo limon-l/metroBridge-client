@@ -90,6 +90,43 @@ html {
         animation: scale-up 260ms ease-out both;
     }
 
+    .banner-surface {
+        position: relative;
+        overflow: hidden;
+        isolation: isolate;
+    }
+
+    .banner-surface::before,
+    .banner-surface::after {
+        content: '';
+        position: absolute;
+        border-radius: 9999px;
+        pointer-events: none;
+        background: rgba(255, 255, 255, 0.15);
+        filter: blur(2px);
+        animation: float-soft 10s ease-in-out infinite;
+    }
+
+    .banner-surface::before {
+        top: -36px;
+        right: -28px;
+        height: 140px;
+        width: 140px;
+    }
+
+    .banner-surface::after {
+        bottom: -44px;
+        left: 18%;
+        height: 108px;
+        width: 108px;
+        animation-delay: -2.5s;
+    }
+
+    .banner-surface>* {
+        position: relative;
+        z-index: 1;
+    }
+
     .shine {
         position: relative;
         overflow: hidden;

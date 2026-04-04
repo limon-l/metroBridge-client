@@ -22,6 +22,21 @@ const steps = [
   },
 ];
 
+const platformHighlights = [
+  {
+    title: "Approved network",
+    text: "Every active member is verified before they can join conversations.",
+  },
+  {
+    title: "Fast collaboration",
+    text: "Jump from mentoring to messages, bookings, and resources without friction.",
+  },
+  {
+    title: "Academic support",
+    text: "Students get guidance, reminders, and community access in one place.",
+  },
+];
+
 export default function LandingPage() {
   return (
     <div>
@@ -95,6 +110,32 @@ export default function LandingPage() {
             </p>
           </Card>
         </MotionReveal>
+      </section>
+
+      <section className="content-container pb-16" id="highlights">
+        <MotionReveal y={18}>
+          <div className="mb-8 text-center">
+            <h2>Built for everyday academic momentum</h2>
+            <p className="section-subtitle">
+              A few focused layers that keep students, mentors, and moderators
+              moving in sync.
+            </p>
+          </div>
+        </MotionReveal>
+
+        <div className="grid gap-4 md:grid-cols-3">
+          {platformHighlights.map((item, index) => (
+            <MotionReveal delay={index * 70} key={item.title} y={16}>
+              <Card className="card-hover-strong border-primary/10 bg-gradient-to-br from-white to-slate-50 p-6">
+                <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-primary to-primary-light text-white">
+                  {String(index + 1).padStart(2, "0")}
+                </div>
+                <h3>{item.title}</h3>
+                <p className="mt-2 text-small text-neutral">{item.text}</p>
+              </Card>
+            </MotionReveal>
+          ))}
+        </div>
       </section>
 
       <AboutSection />

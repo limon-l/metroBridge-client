@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Card from "../components/ui/Card";
 import Button from "../components/ui/Button";
 import PostCard from "../components/feed/PostCard";
 import CreatePostModal from "../components/feed/CreatePostModal";
 import EmptyState from "../components/ui/EmptyState";
+import MotionReveal from "../components/ui/MotionReveal";
 import { useAuth } from "../hooks/useAuth";
 import { useToast } from "../hooks/useToast";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -32,7 +33,6 @@ export default function FeedPage({ role }) {
   const roleBasePath =
     role === "mentor" ? "/mentor" : role === "admin" ? "/admin" : "/student";
 
-  // Save posts to localStorage
   const savePosts = (updatedPosts) => {
     localStorage.setItem("posts", JSON.stringify(updatedPosts));
     setPosts(updatedPosts);
@@ -48,8 +48,7 @@ export default function FeedPage({ role }) {
       userReaction: null,
     };
 
-    const updatedPosts = [newPost, ...posts];
-    savePosts(updatedPosts);
+    savePosts([newPost, ...posts]);
   };
 
   const handleReact = (postId, reaction) => {
@@ -69,7 +68,6 @@ export default function FeedPage({ role }) {
       }),
     );
 
-    // Save to localStorage
     savePosts(
       posts.map((post) => {
         if (post.id === postId) {
@@ -106,7 +104,6 @@ export default function FeedPage({ role }) {
       }),
     );
 
-    // Save to localStorage
     savePosts(
       posts.map((post) => {
         if (post.id === commentData.postId) {
@@ -130,7 +127,6 @@ export default function FeedPage({ role }) {
     const post = posts.find((p) => p.id === postId);
     if (!post) return;
 
-    // Create a shared/reposted version
     const sharedPost = {
       id: Date.now().toString(),
       content: `Shared from ${post.author?.name}`,
@@ -147,26 +143,42 @@ export default function FeedPage({ role }) {
       userReaction: null,
     };
 
-    const updatedPosts = [sharedPost, ...posts];
-    savePosts(updatedPosts);
+    savePosts([sharedPost, ...posts]);
   };
 
   const handleDeletePost = async (postId) => {
-    const updatedPosts = posts.filter((p) => p.id !== postId);
-    savePosts(updatedPosts);
+    savePosts(posts.filter((p) => p.id !== postId));
   };
 
   const resolveAuthorId = (author) => author?.id || author?._id || author?.uid;
 
   const isValidMongoId = (value) => /^[a-f\d]{24}$/i.test(String(value || ""));
 
+  const communityStats = useMemo(() => {
+    const totalComments = posts.reduce(
+      (sum, post) => sum + Number(post.comments?.length || 0),
+      0,
+    );
+    const totalShares = posts.reduce(
+      (sum, post) => sum + Number(post.shares?.length || 0),
+      0,
+    );
+    const uniqueAuthors = new Set(
+      posts.map((post) => post.author?.name).filter(Boolean),
+    ).size;
+
+    return [
+      { label: "Posts", value: posts.length },
+      { label: "Comments", value: totalComments },
+      { label: "Shares", value: totalShares },
+      { label: "Active authors", value: uniqueAuthors },
+    ];
+  }, [posts]);
+
   const handleOpenProfile = (author) => {
     const memberId = resolveAuthorId(author);
     if (!memberId || !isValidMongoId(memberId)) {
-      showToast(
-        "Profile is unavailable for this post uploader.",
-        "error",
-      );
+      showToast("Profile is unavailable for this post uploader.", "error");
       return;
     }
     navigate(`${roleBasePath}/connections/${memberId}`);
@@ -174,8 +186,7 @@ export default function FeedPage({ role }) {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <Card className="bg-gradient-to-r from-primary to-primary-light text-white">
+      <Card className="banner-surface bg-gradient-to-r from-primary via-primary-light to-accent text-white">
         <p className="text-small font-semibold uppercase tracking-wide text-white/80">
           Community Feed
         </p>
@@ -185,44 +196,85 @@ export default function FeedPage({ role }) {
         </p>
       </Card>
 
-      {/* Create Post Section */}
-      <div className="max-w-2xl mx-auto w-full">
-        <Card className="p-4">
-          <div className="flex gap-3 items-center">
-            <div className="h-10 w-10 rounded-full bg-primary/20 flex items-center justify-center font-semibold text-primary flex-shrink-0">
-              {(user?.displayName || user?.email)?.charAt(0).toUpperCase()}
-            </div>
-            <button
-              onClick={() => setIsCreateModalOpen(true)}
-              className="flex-1 px-4 py-2 rounded-full border border-border bg-neutral-light hover:bg-neutral-light/80 text-neutral transition-colors text-left">
-              What's on your mind, {user?.displayName?.split(" ")[0] || "there"}
-              ?
-            </button>
-          </div>
+      <MotionReveal delay={50} y={14}>
+        <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          {communityStats.map((stat) => (
+            <Card
+              key={stat.label}
+              className="card-hover-strong border-0 bg-gradient-to-br from-white to-slate-50 p-5">
+              <p className="text-small text-neutral">{stat.label}</p>
+              <p className="mt-2 text-h3 text-primary">{stat.value}</p>
+            </Card>
+          ))}
+        </section>
+      </MotionReveal>
 
-          <div className="mt-4 flex gap-2 border-t border-border pt-3">
-            <button
-              onClick={() => setIsCreateModalOpen(true)}
-              className="flex-1 flex items-center justify-center gap-2 py-2 text-primary hover:bg-primary/5 rounded-lg transition-colors text-small font-semibold">
-              <FontAwesomeIcon icon={faCamera} />
-              Photo
-            </button>
-            <Button
-              size="sm"
-              variant="primary"
-              onClick={() => setIsCreateModalOpen(true)}
-              className="flex items-center gap-2">
-              <FontAwesomeIcon icon={faPenToSquare} />
-              Post
-            </Button>
+      <MotionReveal delay={90} y={16}>
+        <Card className="card-hover-strong border-primary/10 bg-gradient-to-r from-primary/5 via-white to-accent/5">
+          <div className="grid gap-4 lg:grid-cols-[1.4fr_1fr] lg:items-center">
+            <div>
+              <p className="text-small font-semibold uppercase tracking-wide text-primary">
+                Community spotlight
+              </p>
+              <h3 className="mt-2">Keep the feed active and constructive</h3>
+              <p className="mt-2 text-small text-neutral">
+                Posts, reactions, and shares are surfaced in a cleaner section
+                so members can see momentum at a glance.
+              </p>
+            </div>
+            <div className="grid gap-2 sm:grid-cols-3 lg:grid-cols-1">
+              {["Ask a question", "Share a resource", "Support a peer"].map(
+                (item) => (
+                  <div
+                    key={item}
+                    className="rounded-card border border-primary/10 bg-white px-3 py-2 text-small font-semibold text-primary transition-transform duration-200 hover:-translate-y-0.5">
+                    {item}
+                  </div>
+                ),
+              )}
+            </div>
           </div>
         </Card>
-      </div>
+      </MotionReveal>
 
-      {/* Posts Feed */}
+      <MotionReveal delay={130} y={16}>
+        <div className="max-w-2xl mx-auto w-full">
+          <Card className="p-4">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-primary/20 font-semibold text-primary">
+                {(user?.displayName || user?.email)?.charAt(0).toUpperCase()}
+              </div>
+              <button
+                onClick={() => setIsCreateModalOpen(true)}
+                className="flex-1 rounded-full border border-border bg-neutral-light px-4 py-2 text-left text-neutral transition-colors hover:bg-neutral-light/80">
+                What&apos;s on your mind,{" "}
+                {user?.displayName?.split(" ")[0] || "there"}?
+              </button>
+            </div>
+
+            <div className="mt-4 flex gap-2 border-t border-border pt-3">
+              <button
+                onClick={() => setIsCreateModalOpen(true)}
+                className="flex flex-1 items-center justify-center gap-2 rounded-lg py-2 text-small font-semibold text-primary transition-colors hover:bg-primary/5">
+                <FontAwesomeIcon icon={faCamera} />
+                Photo
+              </button>
+              <Button
+                size="sm"
+                variant="primary"
+                onClick={() => setIsCreateModalOpen(true)}
+                className="flex items-center gap-2">
+                <FontAwesomeIcon icon={faPenToSquare} />
+                Post
+              </Button>
+            </div>
+          </Card>
+        </div>
+      </MotionReveal>
+
       <div className="max-w-2xl mx-auto w-full space-y-4">
         {isLoading ? (
-          <div className="text-center py-12">
+          <div className="py-12 text-center">
             <p className="text-neutral">Loading posts...</p>
           </div>
         ) : posts.length === 0 ? (
@@ -242,9 +294,8 @@ export default function FeedPage({ role }) {
         ) : (
           posts.map((post) => (
             <div key={post.id}>
-              {/* Repost indicator */}
               {post.sharedPost && (
-                <div className="flex items-center gap-2 text-small text-neutral mb-2 ml-4">
+                <div className="mb-2 ml-4 flex items-center gap-2 text-small text-neutral">
                   <FontAwesomeIcon icon={faRepeat} />
                   <span>
                     <button
@@ -260,11 +311,13 @@ export default function FeedPage({ role }) {
                       onClick={() => handleOpenProfile(post.sharedPost?.author)}
                       className="font-semibold text-primary underline-offset-2 hover:underline disabled:cursor-default disabled:text-neutral"
                       disabled={
-                        !isValidMongoId(resolveAuthorId(post.sharedPost?.author))
+                        !isValidMongoId(
+                          resolveAuthorId(post.sharedPost?.author),
+                        )
                       }>
                       {post.sharedPost?.author?.name || "a member"}
-                    </button>
-                    's post
+                    </button>{" "}
+                    &apos;s post
                   </span>
                 </div>
               )}
@@ -282,7 +335,6 @@ export default function FeedPage({ role }) {
         )}
       </div>
 
-      {/* Create Post Modal */}
       <CreatePostModal
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}

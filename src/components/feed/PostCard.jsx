@@ -47,11 +47,12 @@ export default function PostCard({
   };
 
   return (
-    <article className="rounded-2xl border border-border bg-white p-4 shadow-soft transition-all duration-300 hover:-translate-y-[1px] hover:shadow-lg">
+    <article className="group relative overflow-hidden rounded-2xl border border-border bg-white p-4 shadow-soft transition-all duration-300 hover:-translate-y-[1px] hover:shadow-lg">
+      <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-primary via-primary-light to-accent opacity-60 transition-opacity duration-300 group-hover:opacity-100" />
       {/* Post Header */}
-      <div className="flex items-start justify-between mb-3">
+      <div className="mb-3 flex items-start justify-between">
         <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-full bg-gradient-to-br from-primary/20 to-primary-light/20 flex items-center justify-center font-semibold text-primary">
+          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-primary/20 to-primary-light/20 font-semibold text-primary transition-transform duration-300 group-hover:scale-105">
             {(post.author?.name || "U").charAt(0).toUpperCase()}
           </div>
           <div>
@@ -70,7 +71,7 @@ export default function PostCard({
         <div className="relative">
           <button
             onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className="text-xl hover:text-primary transition-colors p-1">
+            className="p-1 text-xl transition-colors hover:text-primary">
             ⋮
           </button>
 
@@ -80,7 +81,7 @@ export default function PostCard({
                 className="fixed inset-0 z-10"
                 onClick={() => setIsMenuOpen(false)}
               />
-              <div className="absolute right-0 top-full mt-1 min-w-[160px] rounded-xl border border-border bg-white shadow-lg z-20">
+              <div className="absolute right-0 top-full z-20 mt-1 min-w-[160px] rounded-xl border border-border bg-white shadow-lg">
                 {isAuthor && (
                   <>
                     <button

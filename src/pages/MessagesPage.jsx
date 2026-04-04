@@ -139,7 +139,7 @@ export default function MessagesPage({ role }) {
   return (
     <div className="space-y-6">
       <MotionReveal y={12}>
-        <Card className="relative overflow-hidden bg-gradient-to-r from-primary via-primary-light to-accent text-white">
+        <Card className="banner-surface relative bg-gradient-to-r from-primary via-primary-light to-accent p-5 text-white sm:p-6 lg:p-7">
           <div className="absolute -right-10 -top-10 h-36 w-36 rounded-full bg-white/15 blur-2xl" />
           <div className="absolute -bottom-8 left-1/3 h-28 w-28 rounded-full bg-white/20 blur-2xl" />
           <div className="relative">

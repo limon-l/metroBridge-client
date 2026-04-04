@@ -67,7 +67,7 @@ export default function ConnectionsPage() {
   return (
     <div className="space-y-6">
       <MotionReveal y={12}>
-        <Card className="bg-gradient-to-r from-primary to-primary-light text-white">
+        <Card className="banner-surface bg-gradient-to-r from-primary via-primary-light to-accent text-white">
           <h2 className="text-white">Connections</h2>
           <p className="mt-2 text-white/90">
             Explore all approved members, send connection requests, and manage

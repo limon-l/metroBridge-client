@@ -112,7 +112,7 @@ export default function DocumentLibraryPage({ role }) {
 
   return (
     <div className="space-y-6">
-      <Card className="bg-gradient-to-r from-primary to-primary-light text-white">
+      <Card className="banner-surface bg-gradient-to-r from-primary via-primary-light to-accent text-white">
         <p className="text-small font-semibold uppercase tracking-wide text-white/80">
           Document Library
         </p>

@@ -146,7 +146,7 @@ export default function AppointmentSchedulerPage({ role }) {
     <div className="space-y-6">
       {/* Header */}
       <MotionReveal>
-        <Card className="bg-gradient-to-r from-primary to-primary-light text-white">
+        <Card className="banner-surface bg-gradient-to-r from-primary via-primary-light to-accent text-white">
           <p className="text-small font-semibold uppercase tracking-wide text-white/80">
             Appointments & Scheduling
           </p>
