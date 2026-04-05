@@ -1,42 +1,44 @@
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import Button from "../ui/Button";
 import Modal from "../ui/Modal";
 import { useAuth } from "../../hooks/useAuth";
 
+const QUICK_EMOJIS = ["😀", "🔥", "👏", "💡", "📚", "🚀", "❤️"];
+
 export default function CreatePostModal({ isOpen, onClose, onSubmit }) {
   const [content, setContent] = useState("");
-  const [mediaPreview, setMediaPreview] = useState([]);
+  const [mediaPreview, setMediaPreview] = useState("");
+  const [mediaName, setMediaName] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const fileInputRef = useRef(null);
   const { user } = useAuth();
 
   const handleImageUpload = (e) => {
-    const files = Array.from(e.target.files);
-    files.forEach((file) => {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setMediaPreview((prev) => [
-          ...prev,
-          { url: reader.result, type: "image" },
-        ]);
-      };
-      reader.readAsDataURL(file);
-    });
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setMediaPreview(String(reader.result || ""));
+      setMediaName(file.name);
+    };
+    reader.readAsDataURL(file);
   };
 
-  const removeMedia = (index) => {
-    setMediaPreview((prev) => prev.filter((_, i) => i !== index));
+  const insertEmoji = (emoji) => {
+    setContent((prev) => `${prev}${emoji}`);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!content.trim()) return;
+    if (!content.trim() && !mediaPreview) return;
 
     setIsSubmitting(true);
     try {
       await onSubmit({
         content,
-        media: mediaPreview,
+        mediaUrl: mediaPreview,
+        mediaName,
         author: {
           id: user?.uid,
           name: user?.displayName || user?.email?.split("@")[0],
@@ -46,7 +48,8 @@ export default function CreatePostModal({ isOpen, onClose, onSubmit }) {
       });
 
       setContent("");
-      setMediaPreview([]);
+      setMediaPreview("");
+      setMediaName("");
       onClose();
     } catch (error) {
       console.error("Error creating post:", error);
@@ -77,9 +80,9 @@ export default function CreatePostModal({ isOpen, onClose, onSubmit }) {
         <textarea
           value={content}
           onChange={(e) => setContent(e.target.value)}
-          placeholder="What's on your mind?"
+          placeholder="Share an update, resource, or achievement..."
           maxLength={1000}
-          className="w-full min-h-[120px] p-3 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary resize-none"
+          className="w-full min-h-[120px] rounded-lg border border-border p-3 focus:outline-none focus:ring-2 focus:ring-primary resize-none"
         />
 
         {/* Character Count */}
@@ -88,34 +91,47 @@ export default function CreatePostModal({ isOpen, onClose, onSubmit }) {
         </div>
 
         {/* Media Preview */}
-        {mediaPreview.length > 0 && (
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-            {mediaPreview.map((media, index) => (
-              <div
-                key={index}
-                className="relative rounded-lg bg-neutral-light overflow-hidden">
-                <img
-                  src={media.url}
-                  alt={`Preview ${index + 1}`}
-                  className="h-24 w-full object-cover"
-                />
-                <button
-                  type="button"
-                  onClick={() => removeMedia(index)}
-                  className="absolute top-1 right-1 bg-danger text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-danger-dark">
-                  ×
-                </button>
-              </div>
-            ))}
+        {mediaPreview ? (
+          <div className="overflow-hidden rounded-lg border border-border bg-slate-50">
+            <img
+              src={mediaPreview}
+              alt={mediaName || "Post preview"}
+              className="h-52 w-full object-cover"
+            />
+            <div className="flex items-center justify-between gap-2 border-t border-border px-3 py-2 text-small text-neutral">
+              <span className="truncate">{mediaName || "Selected photo"}</span>
+              <button
+                type="button"
+                onClick={() => {
+                  setMediaPreview("");
+                  setMediaName("");
+                }}
+                className="font-semibold text-danger hover:underline">
+                Remove
+              </button>
+            </div>
           </div>
-        )}
+        ) : null}
+
+        <div className="flex flex-wrap gap-2 rounded-lg border border-border bg-slate-50 px-3 py-2">
+          {QUICK_EMOJIS.map((emoji) => (
+            <button
+              key={emoji}
+              type="button"
+              onClick={() => insertEmoji(emoji)}
+              className="rounded-full px-2 py-1 text-lg transition-transform hover:scale-110 hover:bg-white"
+              title="Insert emoji">
+              {emoji}
+            </button>
+          ))}
+        </div>
 
         {/* Upload Media Button */}
-        <div className="flex gap-2 flex-wrap border-t border-b border-border py-2">
+        <div className="flex flex-wrap gap-2 border-t border-b border-border py-2">
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
-            className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-neutral-light transition-colors text-primary">
+            className="flex items-center gap-2 rounded-lg px-3 py-2 text-primary transition-colors hover:bg-neutral-light">
             <span>📷</span>
             <span className="text-small">Photo</span>
           </button>
@@ -123,7 +139,6 @@ export default function CreatePostModal({ isOpen, onClose, onSubmit }) {
             ref={fileInputRef}
             type="file"
             onChange={handleImageUpload}
-            multiple
             accept="image/*"
             className="hidden"
           />
@@ -141,8 +156,8 @@ export default function CreatePostModal({ isOpen, onClose, onSubmit }) {
           <Button
             type="submit"
             variant="primary"
-            disabled={!content.trim() || isSubmitting}>
-            {isSubmitting ? "Posting..." : "Post"}
+            disabled={(!content.trim() && !mediaPreview) || isSubmitting}>
+            {isSubmitting ? "Posting..." : "Post now"}
           </Button>
         </div>
       </form>

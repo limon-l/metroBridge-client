@@ -42,6 +42,7 @@ export function AuthProvider({ children }) {
         const currentUser = await getCurrentUser();
         setUser(currentUser);
         setRole(currentUser.role || "student");
+        connectMessageSocket(token);
         localStorage.setItem(
           AUTH_CACHE_KEY,
           JSON.stringify({

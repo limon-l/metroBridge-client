@@ -15,7 +15,10 @@ const normalizeConversation = (item) => ({
 const normalizeMessage = (message) => ({
   id: message?._id || message?.id,
   senderId: message?.sender?._id || message?.senderId,
+  senderName: message?.sender?.fullName || message?.senderName || "Unknown",
   text: message?.content || message?.text || "",
+  mediaUrl: message?.mediaUrl || "",
+  mediaType: message?.mediaType || "",
   timestamp:
     message?.createdAt || message?.timestamp || new Date().toISOString(),
 });
@@ -35,7 +38,7 @@ export async function fetchMessages(conversationId) {
 export async function sendConversationMessage(conversationId, content) {
   const response = await apiClient.post(
     `/conversations/${conversationId}/messages`,
-    { content },
+    content,
   );
   return normalizeMessage(response.data?.data || {});
 }

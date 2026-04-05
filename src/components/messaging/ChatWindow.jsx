@@ -12,9 +12,24 @@ export default function ChatWindow({
   unreadCount = 0,
 }) {
   const [messageText, setMessageText] = useState("");
+  const [mediaPreview, setMediaPreview] = useState("");
+  const [mediaName, setMediaName] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const fileInputRef = useRef(null);
   const messagesEndRef = useRef(null);
   const { user } = useAuth();
+
+  const handleImageUpload = (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setMediaPreview(String(reader.result || ""));
+      setMediaName(file.name);
+    };
+    reader.readAsDataURL(file);
+  };
 
   // Auto scroll to bottom
   useEffect(() => {
@@ -30,12 +45,16 @@ export default function ChatWindow({
     try {
       await onSendMessage({
         conversationId: conversation.id,
-        text: messageText,
+        content: messageText,
+        mediaUrl: mediaPreview,
+        mediaType: mediaPreview ? "image" : "",
         senderId: user?.uid,
         senderName: user?.displayName || user?.email?.split("@")[0],
         timestamp: new Date().toISOString(),
       });
       setMessageText("");
+      setMediaPreview("");
+      setMediaName("");
     } catch (error) {
       console.error("Error sending message:", error);
     } finally {
@@ -109,6 +128,13 @@ export default function ChatWindow({
                     : "bg-white text-text rounded-bl-sm border border-border"
                 }`}>
                 <p className="text-sm break-words">{message.text}</p>
+                {message.mediaUrl ? (
+                  <img
+                    alt={message.mediaName || "Shared media"}
+                    className="mt-2 max-h-60 w-full rounded-xl object-cover"
+                    src={message.mediaUrl}
+                  />
+                ) : null}
                 <p
                   className={`text-xs mt-1 ${isOwn ? "text-white/70" : "text-neutral"}`}>
                   {formatTime(message.timestamp)}
@@ -124,8 +150,29 @@ export default function ChatWindow({
       <form
         onSubmit={handleSubmit}
         className="border-t border-border bg-white p-4">
+        {mediaPreview ? (
+          <div className="mb-3 overflow-hidden rounded-lg border border-border bg-slate-50">
+            <img
+              alt={mediaName || "Attachment preview"}
+              className="h-40 w-full object-cover"
+              src={mediaPreview}
+            />
+            <div className="flex items-center justify-between gap-2 px-3 py-2 text-small text-neutral">
+              <span className="truncate">{mediaName}</span>
+              <button
+                type="button"
+                onClick={() => {
+                  setMediaPreview("");
+                  setMediaName("");
+                }}
+                className="font-semibold text-danger hover:underline">
+                Remove
+              </button>
+            </div>
+          </div>
+        ) : null}
         <div className="mb-2 flex flex-wrap gap-2">
-          {["👍", "🔥", "👏"].map((emoji) => (
+          {["👍", "🔥", "👏", "😊", "📷", "💡"].map((emoji) => (
             <button
               key={emoji}
               type="button"
@@ -140,16 +187,31 @@ export default function ChatWindow({
             type="text"
             value={messageText}
             onChange={(e) => setMessageText(e.target.value)}
-            placeholder="Type a message..."
+            placeholder="Type a message or send a photo..."
             maxLength={500}
             className="flex-1 rounded-card border border-border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary"
             disabled={isSubmitting}
           />
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={handleImageUpload}
+          />
+          <Button
+            type="button"
+            size="sm"
+            variant="secondary"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={isSubmitting}>
+            Photo
+          </Button>
           <Button
             type="submit"
             size="sm"
             variant="primary"
-            disabled={!messageText.trim() || isSubmitting}>
+            disabled={(!messageText.trim() && !mediaPreview) || isSubmitting}>
             Send
           </Button>
         </div>

@@ -1,12 +1,32 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Button from "../ui/Button";
 import { useAuth } from "../../hooks/useAuth";
+import {
+  addCommentToPost,
+  fetchCommentsByPost,
+} from "../../services/postService";
 
 export default function CommentSection({ postId, comments, onAddComment }) {
   const [isOpen, setIsOpen] = useState(false);
   const [commentText, setCommentText] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [loadedComments, setLoadedComments] = useState(comments || []);
   const { user } = useAuth();
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const loadComments = async () => {
+      try {
+        const items = await fetchCommentsByPost(postId);
+        setLoadedComments(items);
+      } catch {
+        setLoadedComments(comments || []);
+      }
+    };
+
+    loadComments();
+  }, [comments, isOpen, postId]);
 
   const handleSubmitComment = async (e) => {
     e.preventDefault();
@@ -14,16 +34,11 @@ export default function CommentSection({ postId, comments, onAddComment }) {
 
     setIsSubmitting(true);
     try {
-      await onAddComment({
-        postId,
-        text: commentText,
-        author: {
-          id: user?.uid,
-          name: user?.displayName || user?.email?.split("@")[0],
-          avatar: user?.photoURL,
-        },
-        createdAt: new Date().toISOString(),
-      });
+      const created = await addCommentToPost(postId, commentText);
+      setLoadedComments((prev) => [...prev, created]);
+      if (onAddComment) {
+        onAddComment(created);
+      }
       setCommentText("");
     } catch (error) {
       console.error("Error posting comment:", error);
@@ -35,10 +50,10 @@ export default function CommentSection({ postId, comments, onAddComment }) {
   return (
     <div className="border-t border-border pt-4">
       {/* Comment List */}
-      {comments && comments.length > 0 && (
+      {loadedComments && loadedComments.length > 0 && (
         <div className="mb-4 space-y-3">
-          {comments.map((comment, index) => (
-            <div key={index} className="flex gap-3">
+          {loadedComments.map((comment) => (
+            <div key={comment.id} className="flex gap-3">
               <div className="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center text-sm font-semibold text-primary flex-shrink-0">
                 {(comment.author?.name || "U").charAt(0).toUpperCase()}
               </div>
@@ -47,7 +62,7 @@ export default function CommentSection({ postId, comments, onAddComment }) {
                   <p className="text-sm font-semibold">
                     {comment.author?.name || "Unknown"}
                   </p>
-                  <p className="text-sm mt-1">{comment.text}</p>
+                  <p className="mt-1 text-sm">{comment.text}</p>
                 </div>
                 <p className="text-xs text-neutral mt-1">
                   {new Date(comment.createdAt).toLocaleDateString()}

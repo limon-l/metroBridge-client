@@ -5,7 +5,11 @@ const normalizeDocument = (doc) => ({
   title: doc?.title || "",
   description: doc?.description || "",
   category: doc?.category || "resources",
+  subject: doc?.subject || "",
+  department: doc?.department || "",
   fileUrl: doc?.fileUrl || "",
+  fileName: doc?.fileName || "",
+  fileType: doc?.fileType || "",
   uploadedBy: {
     id: doc?.uploadedBy?._id || doc?.uploadedBy?.id,
     name: doc?.uploadedBy?.fullName || doc?.uploadedBy?.name || "Unknown",

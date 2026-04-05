@@ -167,6 +167,11 @@ export default function MessagesPage({ role }) {
   const openConversation = async (conversation) => {
     try {
       const messages = await fetchMessages(conversation.id);
+      setConversations((prev) =>
+        prev.map((item) =>
+          item.id === conversation.id ? { ...item, unreadCount: 0 } : item,
+        ),
+      );
       setSelectedConversation({ ...conversation, messages });
     } catch {
       setSelectedConversation({ ...conversation, messages: [] });
@@ -174,10 +179,11 @@ export default function MessagesPage({ role }) {
   };
 
   const handleSendMessage = async (messageData) => {
-    const sent = await sendConversationMessage(
-      messageData.conversationId,
-      messageData.text,
-    );
+    const sent = await sendConversationMessage(messageData.conversationId, {
+      content: messageData.content,
+      mediaUrl: messageData.mediaUrl,
+      mediaType: messageData.mediaType,
+    });
 
     setSelectedConversation((prev) => {
       if (!prev || prev.id !== messageData.conversationId) return prev;
@@ -198,15 +204,33 @@ export default function MessagesPage({ role }) {
   };
 
   const formatTime = (timestamp) => {
+    if (!timestamp) return "-";
     return new Date(timestamp).toLocaleString();
+  };
+
+  const formatConversationTime = (timestamp) => {
+    if (!timestamp) return "Now";
+
+    const date = new Date(timestamp);
+    const diffMs = Date.now() - date.getTime();
+    const minutes = Math.floor(diffMs / 60000);
+    const hours = Math.floor(diffMs / 3600000);
+
+    if (minutes < 1) return "Just now";
+    if (minutes < 60) return `${minutes}m`;
+    if (hours < 24) return `${hours}h`;
+
+    return date.toLocaleDateString([], {
+      month: "short",
+      day: "numeric",
+    });
   };
 
   return (
     <div className="space-y-6">
       <MotionReveal y={12}>
-        <Card className="banner-surface relative bg-gradient-to-r from-primary via-primary-light to-accent p-5 text-white sm:p-6 lg:p-7">
-          <div className="absolute -right-10 -top-10 h-36 w-36 rounded-full bg-white/15 blur-2xl" />
-          <div className="absolute -bottom-8 left-1/3 h-28 w-28 rounded-full bg-white/20 blur-2xl" />
+        <Card className="banner-surface relative flex min-h-[9rem] items-center overflow-hidden bg-gradient-to-r from-primary via-primary-light to-accent p-4 text-white sm:p-5 lg:p-6">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_85%_15%,rgba(255,255,255,0.2),transparent_38%)]" />
           <div className="relative">
             <p className="text-small font-semibold uppercase tracking-wide text-white/80">
               Messaging Hub
@@ -303,6 +327,16 @@ export default function MessagesPage({ role }) {
                     const otherUser = conversation.participants.find(
                       (participant) => participant.id !== user?.uid,
                     );
+                    const initials = (otherUser?.name || "U")
+                      .split(" ")
+                      .filter(Boolean)
+                      .map((word) => word.charAt(0))
+                      .slice(0, 2)
+                      .join("")
+                      .toUpperCase();
+                    const isUnread = Number(conversation.unreadCount || 0) > 0;
+                    const previewText =
+                      conversation.lastMessage?.trim() || "No message yet";
 
                     return (
                       <button
@@ -311,19 +345,40 @@ export default function MessagesPage({ role }) {
                         className={`w-full rounded-card border p-3 text-left transition-all hover:translate-y-[-1px] hover:shadow-soft ${
                           selectedConversation?.id === conversation.id
                             ? "border-primary bg-primary/10"
-                            : "border-border hover:bg-neutral-light"
+                            : isUnread
+                              ? "border-primary/30 bg-primary/5"
+                              : "border-border hover:bg-neutral-light"
                         }`}>
-                        <div className="flex items-center justify-between gap-2">
-                          <p className="text-sm font-semibold text-slate-800">
-                            {otherUser?.name || "Unknown"}
-                          </p>
-                          <p className="text-[11px] text-neutral/80">
-                            {formatTime(conversation.lastMessageTime)}
-                          </p>
+                        <div className="flex items-start gap-3">
+                          <div className="relative flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-primary/20 to-accent/20 text-xs font-semibold text-primary">
+                            {initials}
+                            <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border border-white bg-emerald-500" />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center justify-between gap-2">
+                              <p className="truncate text-sm font-semibold text-slate-800">
+                                {otherUser?.name || "Unknown"}
+                              </p>
+                              <p className="text-[11px] text-neutral/80">
+                                {formatConversationTime(
+                                  conversation.lastMessageTime,
+                                )}
+                              </p>
+                            </div>
+                            <div className="mt-1 flex items-center justify-between gap-2">
+                              <p className="line-clamp-1 text-xs text-neutral">
+                                {previewText}
+                              </p>
+                              {isUnread ? (
+                                <span className="inline-flex min-w-5 items-center justify-center rounded-full bg-accent px-1.5 py-0.5 text-[10px] font-semibold leading-none text-white">
+                                  {conversation.unreadCount > 9
+                                    ? "9+"
+                                    : conversation.unreadCount}
+                                </span>
+                              ) : null}
+                            </div>
+                          </div>
                         </div>
-                        <p className="mt-1 line-clamp-1 text-xs text-neutral">
-                          {conversation.lastMessage || "No message yet"}
-                        </p>
                       </button>
                     );
                   })}

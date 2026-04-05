@@ -1,3 +1,4 @@
+import NotificationTray from "./NotificationTray";
 import Badge from "../ui/Badge";
 import Button from "../ui/Button";
 import { useAuth } from "../../hooks/useAuth";
@@ -35,9 +36,7 @@ export default function TopNavbar({ role }) {
         </div>
         <div className="flex items-center gap-3">
           <Badge variant="accent">{roleLabel[role]}</Badge>
-          <Button size="sm" variant="secondary">
-            Notifications
-          </Button>
+          <NotificationTray />
           <Button onClick={onLogout} size="sm" variant="danger">
             Logout
           </Button>

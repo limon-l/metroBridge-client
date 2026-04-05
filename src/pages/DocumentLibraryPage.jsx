@@ -5,6 +5,7 @@ import Badge from "../components/ui/Badge";
 import Modal from "../components/ui/Modal";
 import EmptyState from "../components/ui/EmptyState";
 import { useAuth } from "../hooks/useAuth";
+import { departments } from "../utils/constants";
 import {
   deleteDocument,
   fetchDocuments,
@@ -30,8 +31,14 @@ export default function DocumentLibraryPage({ role }) {
     title: "",
     description: "",
     category: "resources",
+    subject: "",
+    department: "",
     fileUrl: "",
+    fileName: "",
+    fileType: "",
   });
+  const [uploadMode, setUploadMode] = useState("file");
+  const [uploadPreview, setUploadPreview] = useState("");
 
   const { user } = useAuth();
 
@@ -69,8 +76,13 @@ export default function DocumentLibraryPage({ role }) {
   const handleUploadDocument = async (event) => {
     event.preventDefault();
 
-    if (!uploadData.title || !uploadData.fileUrl) {
-      alert("Title and file URL are required.");
+    if (
+      !uploadData.title ||
+      !uploadData.subject ||
+      !uploadData.department ||
+      !uploadData.fileUrl
+    ) {
+      alert("Title, subject, department, and a file/link are required.");
       return;
     }
 
@@ -81,18 +93,47 @@ export default function DocumentLibraryPage({ role }) {
         title: "",
         description: "",
         category: "resources",
+        subject: "",
+        department: "",
         fileUrl: "",
+        fileName: "",
+        fileType: "",
       });
+      setUploadPreview("");
       setIsUploadModalOpen(false);
     } catch (error) {
       alert(error?.message || "Unable to upload document.");
     }
   };
 
+  const handleFileSelect = (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setUploadData((prev) => ({
+        ...prev,
+        fileUrl: String(reader.result || ""),
+        fileName: file.name,
+        fileType: file.type || "application/octet-stream",
+      }));
+      setUploadPreview(String(reader.result || ""));
+    };
+    reader.readAsDataURL(file);
+  };
+
   const handleDownloadDocument = async (doc) => {
     try {
       await incrementDocumentDownload(doc.id);
-      window.open(doc.fileUrl, "_blank");
+      if (doc.fileUrl.startsWith("data:")) {
+        const link = document.createElement("a");
+        link.href = doc.fileUrl;
+        link.download = doc.fileName || `${doc.title}.bin`;
+        link.click();
+      } else {
+        window.open(doc.fileUrl, "_blank", "noopener,noreferrer");
+      }
       loadDocuments();
     } catch (error) {
       alert(error?.message || "Unable to register download.");
@@ -174,6 +215,32 @@ export default function DocumentLibraryPage({ role }) {
         </div>
       </Card>
 
+      <Card className="card-hover-strong border-primary/10 bg-gradient-to-r from-primary/5 via-white to-accent/5">
+        <div className="grid gap-4 lg:grid-cols-[1.4fr_1fr] lg:items-center">
+          <div>
+            <p className="text-small font-semibold uppercase tracking-wide text-primary">
+              Mentor materials
+            </p>
+            <h3 className="mt-2">
+              Upload class notes, PDFs, and links by subject
+            </h3>
+            <p className="mt-2 text-small text-neutral">
+              Mentors can publish course materials with subject and department
+              metadata so students can find the right file faster.
+            </p>
+          </div>
+          <div className="grid gap-2 sm:grid-cols-3 lg:grid-cols-1">
+            {["PDF", "DOC/DOCX", "Link"].map((item) => (
+              <div
+                key={item}
+                className="rounded-card border border-primary/10 bg-white px-3 py-2 text-small font-semibold text-primary transition-transform duration-200 hover:-translate-y-0.5">
+                {item}
+              </div>
+            ))}
+          </div>
+        </div>
+      </Card>
+
       {isLoading ? (
         <Card>
           <p className="text-neutral">Loading documents...</p>
@@ -186,15 +253,24 @@ export default function DocumentLibraryPage({ role }) {
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {filteredDocuments.map((doc) => (
-            <Card key={doc.id} className="flex flex-col">
+            <Card key={doc.id} className="card-hover-strong flex flex-col">
               <h4 className="font-semibold">{doc.title}</h4>
-              <Badge className="mt-2 w-fit">{doc.category}</Badge>
+              <div className="mt-2 flex flex-wrap gap-2">
+                <Badge className="w-fit">{doc.category}</Badge>
+                <Badge variant="accent" className="w-fit">
+                  {doc.department || "All depts"}
+                </Badge>
+              </div>
+              <p className="mt-2 text-small text-primary">
+                Subject: {doc.subject || "General"}
+              </p>
               <p className="mt-2 flex-1 text-small text-neutral">
                 {doc.description}
               </p>
               <div className="mt-3 space-y-1 text-xs text-neutral">
                 <p>By: {doc.uploadedBy.name}</p>
                 <p>Downloads: {doc.downloads}</p>
+                {doc.fileName ? <p>File: {doc.fileName}</p> : null}
               </div>
               <div className="mt-4 flex gap-2">
                 {role === "mentor" && doc.uploadedBy.id === user?.uid && (
@@ -246,6 +322,38 @@ export default function DocumentLibraryPage({ role }) {
             className="w-full rounded-lg border border-border px-3 py-2"
             rows="3"
           />
+          <div className="grid gap-3 sm:grid-cols-2">
+            <input
+              type="text"
+              placeholder="Subject (e.g. Data Structures)"
+              value={uploadData.subject}
+              onChange={(event) =>
+                setUploadData((prev) => ({
+                  ...prev,
+                  subject: event.target.value,
+                }))
+              }
+              className="w-full rounded-lg border border-border px-3 py-2"
+              required
+            />
+            <select
+              value={uploadData.department}
+              onChange={(event) =>
+                setUploadData((prev) => ({
+                  ...prev,
+                  department: event.target.value,
+                }))
+              }
+              className="w-full rounded-lg border border-border px-3 py-2"
+              required>
+              <option value="">Select department</option>
+              {departments.slice(1).map((department) => (
+                <option key={department} value={department}>
+                  {department}
+                </option>
+              ))}
+            </select>
+          </div>
           <select
             value={uploadData.category}
             onChange={(event) =>
@@ -261,19 +369,56 @@ export default function DocumentLibraryPage({ role }) {
               </option>
             ))}
           </select>
-          <input
-            type="url"
-            placeholder="Public file URL (https://...)"
-            value={uploadData.fileUrl}
-            onChange={(event) =>
-              setUploadData((prev) => ({
-                ...prev,
-                fileUrl: event.target.value,
-              }))
-            }
-            className="w-full rounded-lg border border-border px-3 py-2"
-            required
-          />
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              className={`rounded-full px-3 py-2 text-small font-semibold transition-colors ${
+                uploadMode === "file"
+                  ? "bg-primary text-white"
+                  : "bg-neutral-light text-text"
+              }`}
+              onClick={() => setUploadMode("file")}>
+              Upload file
+            </button>
+            <button
+              type="button"
+              className={`rounded-full px-3 py-2 text-small font-semibold transition-colors ${
+                uploadMode === "link"
+                  ? "bg-primary text-white"
+                  : "bg-neutral-light text-text"
+              }`}
+              onClick={() => setUploadMode("link")}>
+              Add link
+            </button>
+          </div>
+          {uploadMode === "file" ? (
+            <input
+              type="file"
+              accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+              onChange={handleFileSelect}
+              className="w-full rounded-lg border border-border px-3 py-2"
+              required
+            />
+          ) : (
+            <input
+              type="url"
+              placeholder="Public file or link URL (https://...)"
+              value={uploadData.fileUrl}
+              onChange={(event) =>
+                setUploadData((prev) => ({
+                  ...prev,
+                  fileUrl: event.target.value,
+                }))
+              }
+              className="w-full rounded-lg border border-border px-3 py-2"
+              required
+            />
+          )}
+          {uploadPreview ? (
+            <div className="rounded-card border border-border bg-slate-50 p-3 text-small text-neutral">
+              {uploadData.fileName || "Selected file"}
+            </div>
+          ) : null}
           <div className="flex justify-end gap-2">
             <Button
               type="button"

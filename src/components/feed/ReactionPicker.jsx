@@ -3,10 +3,8 @@ import { useState } from "react";
 const REACTIONS = [
   { emoji: "👍", label: "Like", key: "like" },
   { emoji: "❤️", label: "Love", key: "love" },
-  { emoji: "😂", label: "Haha", key: "haha" },
   { emoji: "😮", label: "Wow", key: "wow" },
-  { emoji: "😢", label: "Sad", key: "sad" },
-  { emoji: "😠", label: "Angry", key: "angry" },
+  { emoji: "🤝", label: "Support", key: "support" },
 ];
 
 export default function ReactionPicker({ onReact, currentReaction }) {

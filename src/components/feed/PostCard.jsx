@@ -21,7 +21,10 @@ export default function PostCard({
   const uploaderId = post.author?.id || post.author?._id || post.author?.uid;
 
   const reactionCounts = post.reactions || {};
-  const totalReactions = Object.values(reactionCounts).length || 0;
+  const totalReactions = Object.values(reactionCounts).reduce(
+    (sum, value) => sum + Number(value || 0),
+    0,
+  );
   const userReaction = post.userReaction;
 
   const handleDelete = async () => {
@@ -116,28 +119,15 @@ export default function PostCard({
         <p className="text-text mb-3 leading-relaxed">{post.content}</p>
 
         {/* Media Gallery */}
-        {post.media && post.media.length > 0 && (
-          <div
-            className={`grid gap-2 mb-3 ${
-              post.media.length === 1
-                ? "grid-cols-1"
-                : post.media.length === 2
-                  ? "grid-cols-2"
-                  : "grid-cols-2 sm:grid-cols-3"
-            }`}>
-            {post.media.map((media, index) => (
-              <div
-                key={index}
-                className="rounded-lg overflow-hidden bg-neutral-light">
-                <img
-                  src={media.url}
-                  alt={`Post media ${index + 1}`}
-                  className="h-32 w-full cursor-pointer object-cover transition-all duration-300 hover:scale-[1.02] hover:opacity-90 sm:h-48"
-                />
-              </div>
-            ))}
+        {post.mediaUrl ? (
+          <div className="mb-3 overflow-hidden rounded-xl border border-border bg-slate-50">
+            <img
+              src={post.mediaUrl}
+              alt={post.mediaName || "Post media"}
+              className="max-h-[26rem] w-full object-cover transition-transform duration-300 hover:scale-[1.01]"
+            />
           </div>
-        )}
+        ) : null}
       </div>
 
       {/* Reaction Stats */}
