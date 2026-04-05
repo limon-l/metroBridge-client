@@ -11,20 +11,10 @@ const initialState = {
   universityId: "",
   department: "",
   batch: "",
-  section: "",
-  shift: "",
   email: "",
   password: "",
   phone: "",
-  dateOfBirth: "",
   bloodGroup: "",
-  gender: "",
-  homeAddress: "",
-  emergencyContactName: "",
-  emergencyContactPhone: "",
-  guardianName: "",
-  guardianPhone: "",
-  bio: "",
 };
 
 const departmentOptions = [
@@ -45,21 +35,6 @@ const batchOptions = [
   }),
 ];
 
-const sectionOptions = [
-  { value: "", label: "Select section" },
-  { value: "A", label: "A" },
-  { value: "B", label: "B" },
-  { value: "C", label: "C" },
-  { value: "D", label: "D" },
-];
-
-const shiftOptions = [
-  { value: "", label: "Select shift" },
-  { value: "Morning", label: "Morning" },
-  { value: "Day", label: "Day" },
-  { value: "Evening", label: "Evening" },
-];
-
 const bloodGroupOptions = [
   { value: "", label: "Select blood group" },
   { value: "A+", label: "A+" },
@@ -70,13 +45,6 @@ const bloodGroupOptions = [
   { value: "AB-", label: "AB-" },
   { value: "O+", label: "O+" },
   { value: "O-", label: "O-" },
-];
-
-const genderOptions = [
-  { value: "", label: "Select gender" },
-  { value: "Male", label: "Male" },
-  { value: "Female", label: "Female" },
-  { value: "Other", label: "Other" },
 ];
 
 const formatUniversityId = (value) => {
@@ -120,20 +88,10 @@ export default function StudentSignupPage() {
       "universityId",
       "department",
       "batch",
-      "section",
-      "shift",
       "email",
       "password",
       "phone",
-      "dateOfBirth",
       "bloodGroup",
-      "gender",
-      "homeAddress",
-      "emergencyContactName",
-      "emergencyContactPhone",
-      "guardianName",
-      "guardianPhone",
-      "bio",
     ];
 
     const hasEmpty = required.some((key) => !String(form[key] || "").trim());
@@ -158,7 +116,7 @@ export default function StudentSignupPage() {
   return (
     <AuthShell
       title="Student Registration"
-      subtitle="Submit your full profile for admin verification."
+      subtitle="Submit core details for admin verification."
       tag="Student Onboarding"
       sideTitle="Verification Required"
       sideText="After registration, admin will review your details and approve or ban access.">
@@ -193,20 +151,6 @@ export default function StudentSignupPage() {
           required
         />
         <InputField
-          label="Section"
-          options={sectionOptions}
-          value={form.section}
-          onChange={updateField("section")}
-          required
-        />
-        <InputField
-          label="Shift"
-          options={shiftOptions}
-          value={form.shift}
-          onChange={updateField("shift")}
-          required
-        />
-        <InputField
           className="sm:col-span-2"
           label="Email"
           type="email"
@@ -223,16 +167,9 @@ export default function StudentSignupPage() {
           required
         />
         <InputField
-          label="Phone"
+          label="Mobile Number"
           value={form.phone}
           onChange={updateField("phone")}
-          required
-        />
-        <InputField
-          label="Date of Birth"
-          type="date"
-          value={form.dateOfBirth}
-          onChange={updateField("dateOfBirth")}
           required
         />
         <InputField
@@ -240,51 +177,6 @@ export default function StudentSignupPage() {
           options={bloodGroupOptions}
           value={form.bloodGroup}
           onChange={updateField("bloodGroup")}
-          required
-        />
-        <InputField
-          label="Gender"
-          options={genderOptions}
-          value={form.gender}
-          onChange={updateField("gender")}
-          required
-        />
-        <InputField
-          className="sm:col-span-2"
-          label="Home Address"
-          value={form.homeAddress}
-          onChange={updateField("homeAddress")}
-          required
-        />
-        <InputField
-          label="Emergency Contact Name"
-          value={form.emergencyContactName}
-          onChange={updateField("emergencyContactName")}
-          required
-        />
-        <InputField
-          label="Emergency Contact Phone"
-          value={form.emergencyContactPhone}
-          onChange={updateField("emergencyContactPhone")}
-          required
-        />
-        <InputField
-          label="Guardian Name"
-          value={form.guardianName}
-          onChange={updateField("guardianName")}
-          required
-        />
-        <InputField
-          label="Guardian Phone"
-          value={form.guardianPhone}
-          onChange={updateField("guardianPhone")}
-          required
-        />
-        <InputField
-          className="sm:col-span-2"
-          label="Bio"
-          value={form.bio}
-          onChange={updateField("bio")}
           required
         />
         <div className="sm:col-span-2">

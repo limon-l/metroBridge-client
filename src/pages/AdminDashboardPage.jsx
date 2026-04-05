@@ -11,6 +11,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faBookOpen,
   faCalendarCheck,
+  faCircleInfo,
   faComments,
   faCrown,
   faEnvelope,
@@ -46,7 +47,7 @@ export default function AdminDashboardPage() {
   const [approvedUsers, setApprovedUsers] = useState([]);
   const [selectedUser, setSelectedUser] = useState(null);
   const [isReviewing, setIsReviewing] = useState(false);
-  const [isLoadingDetails, setIsLoadingDetails] = useState(false);
+  const [loadingDetailUserId, setLoadingDetailUserId] = useState("");
   const [pendingRoleFilter, setPendingRoleFilter] = useState("");
   const [approvedFilters, setApprovedFilters] = useState({
     q: "",
@@ -153,6 +154,16 @@ export default function AdminDashboardPage() {
     { key: "department", header: "Department" },
     { key: "universityId", header: "University ID" },
     {
+      key: "phone",
+      header: "Mobile",
+      render: (row) => row.phone || "N/A",
+    },
+    {
+      key: "bloodGroup",
+      header: "Blood Group",
+      render: (row) => row.bloodGroup || "N/A",
+    },
+    {
       key: "status",
       header: "Status",
       render: () => <Badge variant="warning">Pending</Badge>,
@@ -161,15 +172,22 @@ export default function AdminDashboardPage() {
       key: "actions",
       header: "Actions",
       render: (row) => (
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <Button
-            disabled={isLoadingDetails}
+            className="hover:-translate-y-0.5"
+            disabled={Boolean(loadingDetailUserId)}
             size="sm"
             variant="secondary"
             onClick={async () => {
-              setIsLoadingDetails(true);
+              const userId = row._id || row.id;
+              if (!userId) {
+                showToast("User id not found for this row.", "error");
+                return;
+              }
+
+              setLoadingDetailUserId(userId);
               try {
-                const details = await fetchUserDetails(row._id || row.id);
+                const details = await fetchUserDetails(userId);
                 if (details) {
                   setSelectedUser(details);
                 } else {
@@ -181,12 +199,18 @@ export default function AdminDashboardPage() {
                   "error",
                 );
               } finally {
-                setIsLoadingDetails(false);
+                setLoadingDetailUserId("");
               }
             }}>
-            {isLoadingDetails ? "Loading..." : "Details"}
+            <span className="inline-flex items-center gap-1">
+              <FontAwesomeIcon icon={faCircleInfo} />
+              {loadingDetailUserId === (row._id || row.id)
+                ? "Loading..."
+                : "Details"}
+            </span>
           </Button>
           <Button
+            className="hover:-translate-y-0.5"
             disabled={isReviewing}
             size="sm"
             variant="primary"
@@ -219,6 +243,7 @@ export default function AdminDashboardPage() {
             Approve
           </Button>
           <Button
+            className="hover:-translate-y-0.5"
             disabled={isReviewing}
             size="sm"
             variant="danger"
@@ -365,7 +390,9 @@ export default function AdminDashboardPage() {
             </div>
           </div>
           {pendingUsers.length > 0 ? (
-            <DataTable columns={columns} rows={pendingUsers} />
+            <div className="rounded-card border border-primary/15 bg-gradient-to-br from-white via-white to-primary/5 p-1 shadow-soft transition-all duration-300 hover:shadow-lg">
+              <DataTable columns={columns} rows={pendingUsers} />
+            </div>
           ) : (
             <Card className="py-8 text-center">
               <p className="text-neutral">No pending approvals</p>
@@ -452,63 +479,64 @@ export default function AdminDashboardPage() {
       </MotionReveal>
 
       {selectedUser ? (
-        <MotionReveal delay={220} y={22}>
-          <Card>
-            <div className="mb-4 flex items-start justify-between">
-              <div>
-                <h3 className="text-h3">Review {selectedUser.fullName}</h3>
-                <p className="mt-1 text-small text-neutral">
-                  {selectedUser.email}
+        <div className="fixed inset-0 z-40 flex items-center justify-center bg-slate-900/55 p-4 backdrop-blur-sm">
+          <MotionReveal y={18}>
+            <Card className="w-full max-w-3xl border-primary/20 bg-white shadow-2xl">
+              <div className="mb-4 flex items-start justify-between gap-4 border-b border-border pb-4">
+                <div>
+                  <p className="text-small font-semibold uppercase tracking-wide text-primary">
+                    Pending Approval Details
+                  </p>
+                  <h3 className="mt-1 text-h3">{selectedUser.fullName}</h3>
+                  <p className="mt-1 text-small text-neutral">
+                    {selectedUser.email || "No email provided"}
+                  </p>
+                </div>
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  onClick={() => setSelectedUser(null)}>
+                  Close
+                </Button>
+              </div>
+
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                <p className="text-small">
+                  <strong>Role:</strong> {selectedUser.role || "N/A"}
+                </p>
+                <p className="text-small">
+                  <strong>University ID:</strong>{" "}
+                  {selectedUser.universityId || "N/A"}
+                </p>
+                <p className="text-small">
+                  <strong>Mobile Number:</strong> {selectedUser.phone || "N/A"}
+                </p>
+                <p className="text-small">
+                  <strong>Department:</strong>{" "}
+                  {selectedUser.department || "N/A"}
+                </p>
+                <p className="text-small">
+                  <strong>Batch:</strong> {selectedUser.batch || "N/A"}
+                </p>
+                <p className="text-small">
+                  <strong>Blood Group:</strong>{" "}
+                  {selectedUser.bloodGroup || "N/A"}
+                </p>
+                <p className="text-small">
+                  <strong>Section:</strong> {selectedUser.section || "N/A"}
+                </p>
+                <p className="text-small">
+                  <strong>Shift:</strong> {selectedUser.shift || "N/A"}
                 </p>
               </div>
-              <Button
-                size="sm"
-                variant="secondary"
-                onClick={() => setSelectedUser(null)}>
-                Close
-              </Button>
-            </div>
 
-            <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              <p className="text-small">
-                <strong>Role:</strong> {selectedUser.role}
+              <p className="mt-5 text-small text-neutral">
+                Registration details load instantly here so admin can review
+                before Approve/Ban.
               </p>
-              <p className="text-small">
-                <strong>Department:</strong> {selectedUser.department || "N/A"}
-              </p>
-              <p className="text-small">
-                <strong>University ID:</strong>{" "}
-                {selectedUser.universityId || "N/A"}
-              </p>
-              <p className="text-small">
-                <strong>Batch:</strong> {selectedUser.batch || "N/A"}
-              </p>
-              <p className="text-small">
-                <strong>Section:</strong> {selectedUser.section || "N/A"}
-              </p>
-              <p className="text-small">
-                <strong>Shift:</strong> {selectedUser.shift || "N/A"}
-              </p>
-              <p className="text-small">
-                <strong>Phone:</strong> {selectedUser.phone || "N/A"}
-              </p>
-              <p className="text-small">
-                <strong>Blood Group:</strong> {selectedUser.bloodGroup || "N/A"}
-              </p>
-              <p className="text-small">
-                <strong>Guardian:</strong> {selectedUser.guardianName || "N/A"}
-              </p>
-              <p className="text-small">
-                <strong>Guardian Phone:</strong>{" "}
-                {selectedUser.guardianPhone || "N/A"}
-              </p>
-            </div>
-
-            <p className="mt-4 text-small">
-              <strong>Bio:</strong> {selectedUser.bio || "N/A"}
-            </p>
-          </Card>
-        </MotionReveal>
+            </Card>
+          </MotionReveal>
+        </div>
       ) : null}
     </div>
   );

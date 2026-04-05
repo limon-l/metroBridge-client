@@ -10,11 +10,11 @@ const initialState = {
   fullName: "",
   universityId: "",
   department: "",
+  batch: "",
+  bloodGroup: "",
   email: "",
   password: "",
   phone: "",
-  expertise: "",
-  bio: "",
 };
 
 const departmentOptions = [
@@ -27,17 +27,24 @@ const departmentOptions = [
   { value: "Architecture", label: "Architecture" },
 ];
 
-const expertiseOptions = [
-  { value: "", label: "Select primary expertise" },
-  { value: "Programming Fundamentals", label: "Programming Fundamentals" },
-  {
-    value: "Data Structures & Algorithms",
-    label: "Data Structures & Algorithms",
-  },
-  { value: "Database Systems", label: "Database Systems" },
-  { value: "Software Engineering", label: "Software Engineering" },
-  { value: "Networking", label: "Networking" },
-  { value: "Career Guidance", label: "Career Guidance" },
+const batchOptions = [
+  { value: "", label: "Select batch" },
+  ...Array.from({ length: 30 }, (_, index) => {
+    const value = String(index + 1);
+    return { value, label: value };
+  }),
+];
+
+const bloodGroupOptions = [
+  { value: "", label: "Select blood group" },
+  { value: "A+", label: "A+" },
+  { value: "A-", label: "A-" },
+  { value: "B+", label: "B+" },
+  { value: "B-", label: "B-" },
+  { value: "AB+", label: "AB+" },
+  { value: "AB-", label: "AB-" },
+  { value: "O+", label: "O+" },
+  { value: "O-", label: "O-" },
 ];
 
 const formatUniversityId = (value) => {
@@ -80,11 +87,11 @@ export default function MentorSignupPage() {
       "fullName",
       "universityId",
       "department",
+      "batch",
+      "bloodGroup",
       "email",
       "password",
       "phone",
-      "expertise",
-      "bio",
     ];
     const hasEmpty = required.some((key) => !String(form[key] || "").trim());
     if (hasEmpty) {
@@ -97,10 +104,6 @@ export default function MentorSignupPage() {
       await signup({
         ...form,
         role: "mentor",
-        expertise: form.expertise
-          .split(",")
-          .map((item) => item.trim())
-          .filter(Boolean),
       });
       await logout();
       showToast("Mentor registration submitted. Wait for admin approval.");
@@ -115,7 +118,7 @@ export default function MentorSignupPage() {
   return (
     <AuthShell
       title="Mentor Registration"
-      subtitle="Submit your profile and expertise for admin verification."
+      subtitle="Submit core profile fields for admin verification."
       tag="Mentor Onboarding"
       sideTitle="Verification Required"
       sideText="Only admin-approved mentors can log into mentor workspace.">
@@ -143,9 +146,23 @@ export default function MentorSignupPage() {
           required
         />
         <InputField
-          label="Phone"
+          label="Batch"
+          options={batchOptions}
+          value={form.batch}
+          onChange={updateField("batch")}
+          required
+        />
+        <InputField
+          label="Mobile Number"
           value={form.phone}
           onChange={updateField("phone")}
+          required
+        />
+        <InputField
+          label="Blood Group"
+          options={bloodGroupOptions}
+          value={form.bloodGroup}
+          onChange={updateField("bloodGroup")}
           required
         />
         <InputField
@@ -162,21 +179,6 @@ export default function MentorSignupPage() {
           type="password"
           value={form.password}
           onChange={updateField("password")}
-          required
-        />
-        <InputField
-          className="sm:col-span-2"
-          label="Primary Expertise"
-          options={expertiseOptions}
-          value={form.expertise}
-          onChange={updateField("expertise")}
-          required
-        />
-        <InputField
-          className="sm:col-span-2"
-          label="Professional Bio"
-          value={form.bio}
-          onChange={updateField("bio")}
           required
         />
         <div className="sm:col-span-2">
