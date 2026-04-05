@@ -5,6 +5,10 @@ import {
   loginWithBackend,
   signupWithBackend,
 } from "../services/authService";
+import {
+  connectMessageSocket,
+  disconnectMessageSocket,
+} from "../services/socketClient";
 
 const TOKEN_KEY = "metrobridge_token";
 const AUTH_CACHE_KEY = "metrobridge_auth";
@@ -70,6 +74,7 @@ export function AuthProvider({ children }) {
     );
     setUser(userData);
     setRole(userData.role || "student");
+    connectMessageSocket(token);
   };
 
   const signup = async (payload) => {
@@ -87,6 +92,7 @@ export function AuthProvider({ children }) {
   const logout = async () => {
     localStorage.removeItem(TOKEN_KEY);
     localStorage.removeItem(AUTH_CACHE_KEY);
+    disconnectMessageSocket();
     setUser(null);
     setRole("student");
   };

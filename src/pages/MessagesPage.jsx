@@ -6,6 +6,7 @@ import ChatWindow from "../components/messaging/ChatWindow";
 import EmptyState from "../components/ui/EmptyState";
 import MotionReveal from "../components/ui/MotionReveal";
 import { useAuth } from "../hooks/useAuth";
+import { connectMessageSocket } from "../services/socketClient";
 import {
   fetchConversations,
   fetchMessages,
@@ -94,6 +95,75 @@ export default function MessagesPage({ role }) {
     (participant) => participant.id !== user?.uid,
   );
 
+  const mergeIncomingMessage = (conversation, incomingMessage) => {
+    const nextMessages = conversation.messages || [];
+    const alreadyExists = nextMessages.some(
+      (message) => message.id === incomingMessage.id,
+    );
+
+    return {
+      ...conversation,
+      messages: alreadyExists
+        ? nextMessages.map((message) =>
+            message.id === incomingMessage.id ? incomingMessage : message,
+          )
+        : [...nextMessages, incomingMessage],
+      lastMessage: incomingMessage.text,
+      lastMessageTime: incomingMessage.timestamp,
+    };
+  };
+
+  useEffect(() => {
+    const token = localStorage.getItem("metrobridge_token");
+    const socket = connectMessageSocket(token);
+    if (!socket) {
+      return undefined;
+    }
+
+    const handleMessage = ({ conversationId, message }) => {
+      if (!conversationId || !message?.id) {
+        return;
+      }
+
+      setConversations((prev) => {
+        const next = prev.map((item) =>
+          item.id === conversationId
+            ? {
+                ...item,
+                lastMessage: message.text,
+                lastMessageTime: message.timestamp,
+                unreadCount:
+                  selectedConversation?.id === conversationId ||
+                  message.senderId === user?.uid
+                    ? Number(item.unreadCount || 0)
+                    : Number(item.unreadCount || 0) + 1,
+              }
+            : item,
+        );
+
+        return next.sort(
+          (left, right) =>
+            new Date(right.lastMessageTime).getTime() -
+            new Date(left.lastMessageTime).getTime(),
+        );
+      });
+
+      setSelectedConversation((prev) => {
+        if (!prev || prev.id !== conversationId) {
+          return prev;
+        }
+
+        return mergeIncomingMessage(prev, message);
+      });
+    };
+
+    socket.on("message:new", handleMessage);
+
+    return () => {
+      socket.off("message:new", handleMessage);
+    };
+  }, [selectedConversation?.id, user?.uid]);
+
   const openConversation = async (conversation) => {
     try {
       const messages = await fetchMessages(conversation.id);
@@ -111,12 +181,7 @@ export default function MessagesPage({ role }) {
 
     setSelectedConversation((prev) => {
       if (!prev || prev.id !== messageData.conversationId) return prev;
-      return {
-        ...prev,
-        messages: [...(prev.messages || []), sent],
-        lastMessage: sent.text,
-        lastMessageTime: sent.timestamp,
-      };
+      return mergeIncomingMessage(prev, sent);
     });
 
     setConversations((prev) =>
