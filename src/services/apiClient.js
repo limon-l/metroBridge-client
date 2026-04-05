@@ -1,7 +1,17 @@
 import axios from "axios";
 
+const configuredBaseUrl = import.meta.env.VITE_API_BASE_URL;
+const defaultBaseUrl = import.meta.env.PROD
+  ? "https://metrobridge-server.onrender.com/api"
+  : "http://localhost:5000/api";
+
+const resolvedBaseUrl = String(configuredBaseUrl || defaultBaseUrl).replace(
+  /\/$/,
+  "",
+);
+
 const apiClient = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || "http://localhost:5002/api",
+  baseURL: resolvedBaseUrl,
   timeout: 10000,
 });
 
