@@ -6,27 +6,32 @@ import {
   fetchCommentsByPost,
 } from "../../services/postService";
 
-export default function CommentSection({ postId, comments, onAddComment }) {
-  const [isOpen, setIsOpen] = useState(false);
+export default function CommentSection({
+  postId,
+  onAddComment,
+  onOpenProfile,
+}) {
   const [commentText, setCommentText] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [loadedComments, setLoadedComments] = useState(comments || []);
+  const [isLoadingComments, setIsLoadingComments] = useState(true);
+  const [loadedComments, setLoadedComments] = useState([]);
   const { user } = useAuth();
 
   useEffect(() => {
-    if (!isOpen) return;
-
     const loadComments = async () => {
+      setIsLoadingComments(true);
       try {
         const items = await fetchCommentsByPost(postId);
         setLoadedComments(items);
       } catch {
-        setLoadedComments(comments || []);
+        setLoadedComments([]);
+      } finally {
+        setIsLoadingComments(false);
       }
     };
 
     loadComments();
-  }, [comments, isOpen, postId]);
+  }, [postId]);
 
   const handleSubmitComment = async (e) => {
     e.preventDefault();
@@ -36,9 +41,7 @@ export default function CommentSection({ postId, comments, onAddComment }) {
     try {
       const created = await addCommentToPost(postId, commentText);
       setLoadedComments((prev) => [...prev, created]);
-      if (onAddComment) {
-        onAddComment(created);
-      }
+      onAddComment?.(created);
       setCommentText("");
     } catch (error) {
       console.error("Error posting comment:", error);
@@ -48,9 +51,40 @@ export default function CommentSection({ postId, comments, onAddComment }) {
   };
 
   return (
-    <div className="border-t border-border pt-4">
-      {/* Comment List */}
-      {loadedComments && loadedComments.length > 0 && (
+    <div className="border-t border-border pt-4 space-y-4">
+      <form onSubmit={handleSubmitComment} className="space-y-3">
+        <div className="flex gap-3">
+          <div className="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center text-sm font-semibold text-primary flex-shrink-0">
+            {(user?.displayName || user?.email)?.charAt(0).toUpperCase()}
+          </div>
+          <div className="flex-1 space-y-2">
+            <input
+              type="text"
+              value={commentText}
+              onChange={(e) => setCommentText(e.target.value)}
+              placeholder="Write a comment... use @name to mention"
+              maxLength={1000}
+              className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-sm"
+            />
+            <div className="flex justify-between items-center gap-2">
+              <p className="text-xs text-neutral">
+                Mention format: @firstName or @emailPrefix
+              </p>
+              <Button
+                type="submit"
+                size="sm"
+                variant="primary"
+                disabled={!commentText.trim() || isSubmitting}>
+                {isSubmitting ? "Posting..." : "Comment"}
+              </Button>
+            </div>
+          </div>
+        </div>
+      </form>
+
+      {isLoadingComments ? (
+        <p className="text-small text-neutral">Loading comments...</p>
+      ) : loadedComments.length > 0 ? (
         <div className="mb-4 space-y-3">
           {loadedComments.map((comment) => (
             <div key={comment.id} className="flex gap-3">
@@ -59,9 +93,12 @@ export default function CommentSection({ postId, comments, onAddComment }) {
               </div>
               <div className="flex-1">
                 <div className="bg-neutral-light rounded-lg px-3 py-2">
-                  <p className="text-sm font-semibold">
+                  <button
+                    type="button"
+                    onClick={() => onOpenProfile?.(comment.author)}
+                    className="text-sm font-semibold text-primary underline-offset-2 hover:underline">
                     {comment.author?.name || "Unknown"}
-                  </p>
+                  </button>
                   <p className="mt-1 text-sm">{comment.text}</p>
                 </div>
                 <p className="text-xs text-neutral mt-1">
@@ -71,54 +108,8 @@ export default function CommentSection({ postId, comments, onAddComment }) {
             </div>
           ))}
         </div>
-      )}
-
-      {/* Comment Input Toggle */}
-      {!isOpen && (
-        <button
-          onClick={() => setIsOpen(true)}
-          className="text-primary text-small font-semibold hover:underline">
-          Add a comment...
-        </button>
-      )}
-
-      {/* Comment Input Form */}
-      {isOpen && (
-        <form onSubmit={handleSubmitComment} className="space-y-3 mt-4">
-          <div className="flex gap-3">
-            <div className="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center text-sm font-semibold text-primary flex-shrink-0">
-              {(user?.displayName || user?.email)?.charAt(0).toUpperCase()}
-            </div>
-            <input
-              type="text"
-              value={commentText}
-              onChange={(e) => setCommentText(e.target.value)}
-              placeholder="Write a comment..."
-              maxLength={200}
-              className="flex-1 px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-sm"
-              autoFocus
-            />
-          </div>
-
-          <div className="flex justify-end gap-2">
-            <button
-              type="button"
-              onClick={() => {
-                setIsOpen(false);
-                setCommentText("");
-              }}
-              className="px-3 py-1 text-sm text-neutral hover:text-text transition-colors">
-              Cancel
-            </button>
-            <Button
-              type="submit"
-              size="sm"
-              variant="primary"
-              disabled={!commentText.trim() || isSubmitting}>
-              {isSubmitting ? "Posting..." : "Comment"}
-            </Button>
-          </div>
-        </form>
+      ) : (
+        <p className="text-small text-neutral">No comments yet.</p>
       )}
     </div>
   );

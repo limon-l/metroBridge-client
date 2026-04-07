@@ -4,10 +4,8 @@ import Button from "../components/ui/Button";
 import Badge from "../components/ui/Badge";
 import Modal from "../components/ui/Modal";
 import EmptyState from "../components/ui/EmptyState";
-import { useAuth } from "../hooks/useAuth";
 import { departments } from "../utils/constants";
 import {
-  deleteDocument,
   fetchDocuments,
   incrementDocumentDownload,
   uploadDocument,
@@ -39,8 +37,6 @@ export default function DocumentLibraryPage({ role }) {
   });
   const [uploadMode, setUploadMode] = useState("file");
   const [uploadPreview, setUploadPreview] = useState("");
-
-  const { user } = useAuth();
 
   const loadDocuments = useCallback(async () => {
     setIsLoading(true);
@@ -140,15 +136,10 @@ export default function DocumentLibraryPage({ role }) {
     }
   };
 
-  const handleDeleteDocument = async (documentId) => {
-    if (!window.confirm("Delete this document?")) return;
+  const handleViewDocument = (doc) => {
+    if (!doc?.fileUrl) return;
 
-    try {
-      await deleteDocument(documentId);
-      setDocuments((prev) => prev.filter((doc) => doc.id !== documentId));
-    } catch (error) {
-      alert(error?.message || "Unable to delete document.");
-    }
+    window.location.assign(doc.fileUrl);
   };
 
   return (
@@ -159,9 +150,7 @@ export default function DocumentLibraryPage({ role }) {
         </p>
         <h2 className="text-white">Resources & Materials</h2>
         <p className="mt-2 text-white/90">
-          {role === "mentor"
-            ? "Upload and manage course materials with database persistence"
-            : "Access shared resources and study materials from database"}
+          Access shared resources and study materials from the database.
         </p>
       </Card>
 
@@ -215,32 +204,6 @@ export default function DocumentLibraryPage({ role }) {
         </div>
       </Card>
 
-      <Card className="card-hover-strong border-primary/10 bg-gradient-to-r from-primary/5 via-white to-accent/5">
-        <div className="grid gap-4 lg:grid-cols-[1.4fr_1fr] lg:items-center">
-          <div>
-            <p className="text-small font-semibold uppercase tracking-wide text-primary">
-              Mentor materials
-            </p>
-            <h3 className="mt-2">
-              Upload class notes, PDFs, and links by subject
-            </h3>
-            <p className="mt-2 text-small text-neutral">
-              Mentors can publish course materials with subject and department
-              metadata so students can find the right file faster.
-            </p>
-          </div>
-          <div className="grid gap-2 sm:grid-cols-3 lg:grid-cols-1">
-            {["PDF", "DOC/DOCX", "Link"].map((item) => (
-              <div
-                key={item}
-                className="rounded-card border border-primary/10 bg-white px-3 py-2 text-small font-semibold text-primary transition-transform duration-200 hover:-translate-y-0.5">
-                {item}
-              </div>
-            ))}
-          </div>
-        </div>
-      </Card>
-
       {isLoading ? (
         <Card>
           <p className="text-neutral">Loading documents...</p>
@@ -273,15 +236,13 @@ export default function DocumentLibraryPage({ role }) {
                 {doc.fileName ? <p>File: {doc.fileName}</p> : null}
               </div>
               <div className="mt-4 flex gap-2">
-                {role === "mentor" && doc.uploadedBy.id === user?.uid && (
-                  <Button
-                    size="sm"
-                    variant="danger"
-                    onClick={() => handleDeleteDocument(doc.id)}
-                    className="flex-1">
-                    Delete
-                  </Button>
-                )}
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  onClick={() => handleViewDocument(doc)}
+                  className="flex-1">
+                  View
+                </Button>
                 <Button
                   size="sm"
                   variant="primary"

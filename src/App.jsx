@@ -33,6 +33,7 @@ import StudentLoginPage from "./pages/StudentLoginPage";
 import StudentSignupPage from "./pages/StudentSignupPage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
 import VideoCallPage from "./pages/VideoCallPage";
+import VoiceCallPage from "./pages/VoiceCallPage";
 
 function App() {
   return (
@@ -87,6 +88,7 @@ function App() {
               element={<ConnectionMemberProfilePage />}
             />
             <Route path="messages" element={<MessagesPage role="student" />} />
+            <Route path="voice-call" element={<VoiceCallPage />} />
             <Route path="video-call" element={<VideoCallPage />} />
             <Route path="library" element={<CourseLibraryPage />} />
             <Route path="library/:courseId" element={<CourseDetailPage />} />
@@ -109,6 +111,7 @@ function App() {
               element={<ConnectionMemberProfilePage />}
             />
             <Route path="messages" element={<MessagesPage role="mentor" />} />
+            <Route path="voice-call" element={<VoiceCallPage />} />
             <Route
               path="appointments"
               element={<AppointmentSchedulerPage role="mentor" />}
@@ -137,6 +140,7 @@ function App() {
               element={<ConnectionMemberProfilePage />}
             />
             <Route path="messages" element={<MessagesPage role="admin" />} />
+            <Route path="voice-call" element={<VoiceCallPage />} />
             <Route
               path="appointments"
               element={<AppointmentSchedulerPage role="admin" />}

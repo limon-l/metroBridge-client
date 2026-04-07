@@ -1,7 +1,15 @@
-import { useState, useRef, useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import Button from "../ui/Button";
 import Card from "../ui/Card";
 import { useAuth } from "../../hooks/useAuth";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faPhone,
+  faPhoneSlash,
+  faArrowDown,
+  faXmark,
+} from "@fortawesome/free-solid-svg-icons";
 
 export default function ChatWindow({
   conversation,
@@ -10,6 +18,8 @@ export default function ChatWindow({
   isMinimized,
   onToggleMinimize,
   unreadCount = 0,
+  variant = "floating",
+  voiceCallPath = "",
 }) {
   const [messageText, setMessageText] = useState("");
   const [mediaPreview, setMediaPreview] = useState("");
@@ -18,6 +28,8 @@ export default function ChatWindow({
   const fileInputRef = useRef(null);
   const messagesEndRef = useRef(null);
   const { user } = useAuth();
+  const navigate = useNavigate();
+  const isEmbedded = variant === "embedded";
 
   const handleImageUpload = (event) => {
     const file = event.target.files?.[0];
@@ -71,7 +83,18 @@ export default function ChatWindow({
 
   const otherUser = conversation.participants.find((p) => p.id !== user?.uid);
 
-  if (isMinimized) {
+  const handleStartVoiceCall = () => {
+    if (!voiceCallPath) return;
+
+    navigate(voiceCallPath, {
+      state: {
+        conversation,
+        participant: otherUser,
+      },
+    });
+  };
+
+  if (!isEmbedded && isMinimized) {
     return (
       <div className="fixed bottom-0 right-3 z-40 sm:right-4">
         <button
@@ -88,26 +111,42 @@ export default function ChatWindow({
     );
   }
 
+  const containerClass = isEmbedded
+    ? "flex h-full min-h-[36rem] flex-col overflow-hidden rounded-3xl border border-border bg-white shadow-soft"
+    : "fixed bottom-0 left-2 right-2 z-40 flex h-[32rem] flex-col rounded-t-2xl rounded-b-none border-t border-l border-r border-border bg-white/95 shadow-2xl backdrop-blur sm:left-auto sm:right-4 sm:w-[26rem]";
+
   return (
-    <Card className="fixed bottom-0 left-2 right-2 z-40 flex h-[32rem] flex-col rounded-t-2xl rounded-b-none border-t border-l border-r border-border bg-white/95 shadow-2xl backdrop-blur sm:left-auto sm:right-4 sm:w-[26rem]">
-      {/* Header */}
+    <Card className={containerClass}>
       <div className="flex items-center justify-between border-b border-border bg-gradient-to-r from-slate-900 to-primary p-4 text-white">
-        <div>
-          <p className="font-semibold">{otherUser?.name}</p>
-          <p className="text-xs text-white/80">Active now</p>
+        <div className="min-w-0">
+          <p className="truncate font-semibold">{otherUser?.name}</p>
+          <p className="text-xs text-white/80">
+            {isEmbedded ? "Conversation open" : "Active now"}
+          </p>
         </div>
         <div className="flex items-center gap-2">
-          <button
-            onClick={onToggleMinimize}
-            className="rounded px-2 py-1 text-sm text-white/90 hover:bg-white/20 transition-colors"
-            aria-label="Minimize chat">
-            _
-          </button>
+          <Button
+            size="sm"
+            variant="secondary"
+            onClick={handleStartVoiceCall}
+            disabled={!voiceCallPath || !otherUser}
+            className="bg-white text-slate-900 hover:bg-slate-100">
+            <FontAwesomeIcon icon={faPhone} />
+            Voice call
+          </Button>
+          {isEmbedded ? null : (
+            <button
+              onClick={onToggleMinimize}
+              className="rounded px-2 py-1 text-sm text-white/90 transition-colors hover:bg-white/20"
+              aria-label="Minimize chat">
+              <FontAwesomeIcon icon={faArrowDown} />
+            </button>
+          )}
           <button
             onClick={onClose}
-            className="text-xl text-white/90 hover:text-white transition-colors"
+            className="rounded px-2 py-1 text-xl text-white/90 transition-colors hover:bg-white/20 hover:text-white"
             aria-label="Close chat">
-            ✕
+            <FontAwesomeIcon icon={faXmark} />
           </button>
         </div>
       </div>

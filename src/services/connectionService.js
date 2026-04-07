@@ -29,6 +29,11 @@ export async function respondConnectionRequest(requestId, action) {
   return response.data?.data;
 }
 
+export async function cancelConnectionRequest(requestId) {
+  const response = await apiClient.delete(`/connections/requests/${requestId}`);
+  return response.data?.data;
+}
+
 export async function fetchMemberProfile(memberId) {
   const response = await apiClient.get(
     `/connections/members/${memberId}/profile`,

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useLocation } from "react-router-dom";
 import Card from "../components/ui/Card";
 import Button from "../components/ui/Button";
@@ -15,17 +15,22 @@ import {
 
 export default function MessagesPage({ role }) {
   const location = useLocation();
+  const { user } = useAuth();
+  const currentRole = role || "student";
+  const roleBasePath =
+    currentRole === "mentor"
+      ? "/mentor"
+      : currentRole === "admin"
+        ? "/admin"
+        : "/student";
+
   const [conversations, setConversations] = useState([]);
   const [selectedConversation, setSelectedConversation] = useState(null);
-  const [isMiniChatMinimized, setIsMiniChatMinimized] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeFilter, setActiveFilter] = useState("all");
-  const { user } = useAuth();
 
-  const currentRole = role || "student";
-
-  const loadConversations = async () => {
+  const loadConversations = useCallback(async () => {
     setIsLoading(true);
     try {
       const items = await fetchConversations();
@@ -35,17 +40,15 @@ export default function MessagesPage({ role }) {
     } finally {
       setIsLoading(false);
     }
-  };
-
-  useEffect(() => {
-    loadConversations();
   }, []);
 
   useEffect(() => {
+    loadConversations();
+  }, [loadConversations]);
+
+  useEffect(() => {
     const openConversationId = location.state?.openConversationId;
-    if (!openConversationId || conversations.length === 0) {
-      return;
-    }
+    if (!openConversationId || conversations.length === 0) return;
 
     const match = conversations.find((item) => item.id === openConversationId);
     if (match) {
@@ -65,9 +68,7 @@ export default function MessagesPage({ role }) {
         (otherUser?.name || "").toLowerCase().includes(query) ||
         (conversation.lastMessage || "").toLowerCase().includes(query);
 
-      if (!matchesSearch) {
-        return false;
-      }
+      if (!matchesSearch) return false;
 
       if (activeFilter === "unread") {
         return Number(conversation.unreadCount || 0) > 0;
@@ -91,10 +92,6 @@ export default function MessagesPage({ role }) {
     [conversations],
   );
 
-  const selectedOtherUser = selectedConversation?.participants.find(
-    (participant) => participant.id !== user?.uid,
-  );
-
   const mergeIncomingMessage = (conversation, incomingMessage) => {
     const nextMessages = conversation.messages || [];
     const alreadyExists = nextMessages.some(
@@ -116,14 +113,10 @@ export default function MessagesPage({ role }) {
   useEffect(() => {
     const token = localStorage.getItem("metrobridge_token");
     const socket = connectMessageSocket(token);
-    if (!socket) {
-      return undefined;
-    }
+    if (!socket) return undefined;
 
     const handleMessage = ({ conversationId, message }) => {
-      if (!conversationId || !message?.id) {
-        return;
-      }
+      if (!conversationId || !message?.id) return;
 
       setConversations((prev) => {
         const next = prev.map((item) =>
@@ -149,16 +142,12 @@ export default function MessagesPage({ role }) {
       });
 
       setSelectedConversation((prev) => {
-        if (!prev || prev.id !== conversationId) {
-          return prev;
-        }
-
+        if (!prev || prev.id !== conversationId) return prev;
         return mergeIncomingMessage(prev, message);
       });
     };
 
     socket.on("message:new", handleMessage);
-
     return () => {
       socket.off("message:new", handleMessage);
     };
@@ -201,11 +190,6 @@ export default function MessagesPage({ role }) {
           : item,
       ),
     );
-  };
-
-  const formatTime = (timestamp) => {
-    if (!timestamp) return "-";
-    return new Date(timestamp).toLocaleString();
   };
 
   const formatConversationTime = (timestamp) => {
@@ -278,7 +262,7 @@ export default function MessagesPage({ role }) {
           <div className="lg:col-span-4">
             <Card className="h-full">
               <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
-                <h3>Conversations</h3>
+                <h3>Inbox</h3>
                 <Button
                   size="sm"
                   variant="secondary"
@@ -303,6 +287,7 @@ export default function MessagesPage({ role }) {
                 ].map((item) => (
                   <button
                     key={item.key}
+                    type="button"
                     onClick={() => setActiveFilter(item.key)}
                     className={`rounded-full border px-3 py-1 text-xs font-semibold transition-all ${
                       activeFilter === item.key
@@ -322,7 +307,7 @@ export default function MessagesPage({ role }) {
                   description="Try another search or filter and refresh inbox."
                 />
               ) : (
-                <div className="max-h-[30rem] space-y-2 overflow-y-auto pr-1">
+                <div className="max-h-[34rem] space-y-2 overflow-y-auto pr-1">
                   {filteredConversations.map((conversation) => {
                     const otherUser = conversation.participants.find(
                       (participant) => participant.id !== user?.uid,
@@ -341,6 +326,7 @@ export default function MessagesPage({ role }) {
                     return (
                       <button
                         key={conversation.id}
+                        type="button"
                         onClick={() => openConversation(conversation)}
                         className={`w-full rounded-card border p-3 text-left transition-all hover:translate-y-[-1px] hover:shadow-soft ${
                           selectedConversation?.id === conversation.id
@@ -389,73 +375,29 @@ export default function MessagesPage({ role }) {
 
           <div className="lg:col-span-8">
             {selectedConversation ? (
-              <Card className="h-full min-h-[18rem]">
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                  <div>
-                    <h3>{selectedOtherUser?.name || "Conversation"}</h3>
-                    <p className="mt-1 text-small text-neutral">
-                      Direct messages with persistent history.
-                    </p>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    <Button size="sm" variant="secondary">
-                      Pin chat
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="secondary"
-                      onClick={() => setIsMiniChatMinimized(false)}>
-                      Expand chat
-                    </Button>
-                  </div>
-                </div>
-
-                <div className="mt-4 grid gap-3 sm:grid-cols-3">
-                  <div className="rounded-card border border-border bg-slate-50 p-3">
-                    <p className="text-xs uppercase tracking-wide text-slate-500">
-                      Last update
-                    </p>
-                    <p className="mt-1 text-sm font-semibold text-slate-800">
-                      {formatTime(selectedConversation.lastMessageTime)}
-                    </p>
-                  </div>
-                  <div className="rounded-card border border-border bg-slate-50 p-3">
-                    <p className="text-xs uppercase tracking-wide text-slate-500">
-                      Messages
-                    </p>
-                    <p className="mt-1 text-sm font-semibold text-slate-800">
-                      {(selectedConversation.messages || []).length}
-                    </p>
-                  </div>
-                  <div className="rounded-card border border-border bg-slate-50 p-3">
-                    <p className="text-xs uppercase tracking-wide text-slate-500">
-                      Status
-                    </p>
-                    <p className="mt-1 text-sm font-semibold text-emerald-600">
-                      Active thread
-                    </p>
-                  </div>
+              <ChatWindow
+                conversation={selectedConversation}
+                onSendMessage={handleSendMessage}
+                onClose={() => setSelectedConversation(null)}
+                isMinimized={false}
+                onToggleMinimize={() => {}}
+                variant="embedded"
+                voiceCallPath={`${roleBasePath}/voice-call`}
+              />
+            ) : (
+              <Card className="flex min-h-[36rem] items-center justify-center border-dashed border-border bg-gradient-to-br from-white to-slate-50">
+                <div className="max-w-md text-center">
+                  <h3>Select a conversation</h3>
+                  <p className="mt-2 text-small text-neutral">
+                    Choose a thread from the inbox to open the conversation on
+                    the right, just like a modern messenger.
+                  </p>
                 </div>
               </Card>
-            ) : (
-              <EmptyState
-                title="Select a conversation"
-                description="Choose a thread from the inbox to open your premium chat window."
-              />
             )}
           </div>
         </div>
       </MotionReveal>
-
-      {selectedConversation && (
-        <ChatWindow
-          conversation={selectedConversation}
-          onSendMessage={handleSendMessage}
-          onClose={() => setSelectedConversation(null)}
-          isMinimized={isMiniChatMinimized}
-          onToggleMinimize={() => setIsMiniChatMinimized((prev) => !prev)}
-        />
-      )}
     </div>
   );
 }

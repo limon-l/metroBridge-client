@@ -18,6 +18,8 @@ const normalizePost = (post) => ({
   reactions: post?.reactionCounts || {},
   userReaction: post?.userReaction || null,
   commentsCount: post?.commentsCount || 0,
+  sharedPostId: post?.sharedPostId || null,
+  sharedPost: post?.sharedPostId ? normalizePost(post.sharedPostId) : null,
 });
 
 const normalizeComment = (comment) => ({
@@ -27,6 +29,16 @@ const normalizeComment = (comment) => ({
   author: normalizeAuthor(comment?.author),
 });
 
+const normalizeReactionUser = (item) => ({
+  type: item?.type || "like",
+  user: {
+    id: item?.user?.id || item?.user?._id,
+    name: item?.user?.fullName || "Unknown",
+    role: item?.user?.role || "student",
+    department: item?.user?.department || "",
+  },
+});
+
 export async function fetchPosts(params = {}) {
   const response = await apiClient.get("/posts", { params });
   return (response.data?.data || []).map(normalizePost);
@@ -34,6 +46,14 @@ export async function fetchPosts(params = {}) {
 
 export async function createPost(payload) {
   const response = await apiClient.post("/posts", payload);
+  return normalizePost(response.data?.data || {});
+}
+
+export async function sharePost(postId, sharedContent = "") {
+  const response = await apiClient.post("/posts", {
+    content: sharedContent,
+    sharedPostId: postId,
+  });
   return normalizePost(response.data?.data || {});
 }
 
@@ -51,6 +71,15 @@ export async function reactToPost(postId, type) {
 export async function removePostReaction(postId) {
   const response = await apiClient.delete(`/posts/${postId}/reactions`);
   return response.data?.data || {};
+}
+
+export async function fetchPostReactions(postId) {
+  const response = await apiClient.get(`/posts/${postId}/reactions`);
+  return {
+    total: Number(response.data?.data?.total || 0),
+    counts: response.data?.data?.counts || {},
+    items: (response.data?.data?.items || []).map(normalizeReactionUser),
+  };
 }
 
 export async function fetchCommentsByPost(postId) {

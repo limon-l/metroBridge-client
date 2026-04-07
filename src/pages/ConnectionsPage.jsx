@@ -9,6 +9,7 @@ import { useAuth } from "../hooks/useAuth";
 import {
   fetchConnectionRequests,
   fetchMemberDirectory,
+  cancelConnectionRequest,
   respondConnectionRequest,
   sendConnectionRequest,
 } from "../services/connectionService";
@@ -23,6 +24,7 @@ export default function ConnectionsPage() {
   const [members, setMembers] = useState([]);
   const [incoming, setIncoming] = useState([]);
   const [sent, setSent] = useState([]);
+  const [requestView, setRequestView] = useState("incoming");
   const [loading, setLoading] = useState(false);
   const roleBasePath =
     role === "mentor" ? "/mentor" : role === "admin" ? "/admin" : "/student";
@@ -63,6 +65,19 @@ export default function ConnectionsPage() {
     () => sent.filter((item) => item.status === "pending"),
     [sent],
   );
+
+  const activeRequests =
+    requestView === "incoming" ? pendingIncoming : pendingSent;
+
+  const handleCancelRequest = async (requestId) => {
+    try {
+      await cancelConnectionRequest(requestId);
+      showToast("Request cancelled.", "success");
+      loadData();
+    } catch (error) {
+      showToast(error?.message || "Failed to cancel request.", "error");
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -177,99 +192,138 @@ export default function ConnectionsPage() {
       </MotionReveal>
 
       <MotionReveal delay={140} y={18}>
-        <section className="grid gap-4 lg:grid-cols-2">
-          <Card>
-            <h3>Incoming Requests</h3>
-            <div className="mt-4 space-y-3">
-              {pendingIncoming.length === 0 ? (
-                <p className="text-small text-neutral">No incoming requests.</p>
-              ) : (
-                pendingIncoming.map((item) => (
-                  <div
-                    key={item._id}
-                    className="rounded-card border border-border p-4">
-                    <Link
-                      className="font-semibold text-primary underline-offset-2 hover:underline"
-                      to={`${roleBasePath}/connections/${item.requester?._id || item.requester?.id}`}>
-                      {item.requester?.fullName}
-                    </Link>
-                    <p className="text-small text-neutral">
-                      {item.requester?.universityId || "No ID"}
-                    </p>
-                    <p className="text-small text-neutral">
-                      {item.requester?.department || "N/A"}
-                    </p>
-                    <div className="mt-3 flex gap-2">
-                      <Button
-                        size="sm"
-                        variant="secondary"
-                        onClick={async () => {
-                          try {
-                            await respondConnectionRequest(item._id, "reject");
-                            showToast("Request rejected.", "success");
-                            loadData();
-                          } catch (error) {
-                            showToast(
-                              error?.message || "Failed to reject.",
-                              "error",
-                            );
-                          }
-                        }}>
-                        Reject
-                      </Button>
-                      <Button
-                        size="sm"
-                        onClick={async () => {
-                          try {
-                            await respondConnectionRequest(item._id, "approve");
-                            showToast("Request approved.", "success");
-                            loadData();
-                          } catch (error) {
-                            showToast(
-                              error?.message || "Failed to approve.",
-                              "error",
-                            );
-                          }
-                        }}>
-                        Approve
-                      </Button>
-                    </div>
-                  </div>
-                ))
-              )}
+        <Card>
+          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <div>
+              <h3>Connection Requests</h3>
+              <p className="text-small text-neutral">
+                Incoming requests and sent requests are organized in one block.
+              </p>
             </div>
-          </Card>
+            <div className="flex rounded-full border border-border bg-neutral-light p-1">
+              <button
+                type="button"
+                onClick={() => setRequestView("incoming")}
+                className={`rounded-full px-4 py-2 text-small font-semibold transition-colors ${
+                  requestView === "incoming"
+                    ? "bg-primary text-white"
+                    : "text-text hover:text-primary"
+                }`}>
+                Incoming ({pendingIncoming.length})
+              </button>
+              <button
+                type="button"
+                onClick={() => setRequestView("sent")}
+                className={`rounded-full px-4 py-2 text-small font-semibold transition-colors ${
+                  requestView === "sent"
+                    ? "bg-primary text-white"
+                    : "text-text hover:text-primary"
+                }`}>
+                Sent ({pendingSent.length})
+              </button>
+            </div>
+          </div>
 
-          <Card>
-            <h3>Sent Requests</h3>
-            <div className="mt-4 space-y-3">
-              {pendingSent.length === 0 ? (
-                <p className="text-small text-neutral">No sent requests.</p>
-              ) : (
-                pendingSent.map((item) => (
+          <div className="mt-5 space-y-3">
+            {activeRequests.length === 0 ? (
+              <p className="text-small text-neutral">
+                {requestView === "incoming"
+                  ? "No incoming requests."
+                  : "No sent requests."}
+              </p>
+            ) : (
+              activeRequests.map((item) => {
+                const isIncoming = requestView === "incoming";
+                const person = isIncoming ? item.requester : item.recipient;
+
+                return (
                   <div
                     key={item._id}
-                    className="rounded-card border border-border p-4">
-                    <Link
-                      className="font-semibold text-primary underline-offset-2 hover:underline"
-                      to={`${roleBasePath}/connections/${item.recipient?._id || item.recipient?.id}`}>
-                      {item.recipient?.fullName}
-                    </Link>
-                    <p className="text-small text-neutral">
-                      {item.recipient?.universityId || "No ID"}
-                    </p>
-                    <p className="text-small text-neutral">
-                      {item.recipient?.department || "N/A"}
-                    </p>
-                    <div className="mt-2">
-                      <Badge variant="warning">Pending</Badge>
+                    className="rounded-2xl border border-border bg-white p-4 shadow-soft">
+                    <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+                      <div>
+                        <Link
+                          className="font-semibold text-primary underline-offset-2 hover:underline"
+                          to={`${roleBasePath}/connections/${person?._id || person?.id}`}>
+                          {person?.fullName}
+                        </Link>
+                        <p className="text-small text-neutral">
+                          {person?.universityId || "No ID"}
+                        </p>
+                        <p className="text-small text-neutral">
+                          {person?.department || "N/A"}
+                        </p>
+                      </div>
+
+                      <Badge variant={isIncoming ? "accent" : "warning"}>
+                        {isIncoming ? "Incoming" : "Sent"}
+                      </Badge>
+                    </div>
+
+                    <div className="mt-4 flex flex-wrap gap-2">
+                      {isIncoming ? (
+                        <>
+                          <Button
+                            size="sm"
+                            variant="secondary"
+                            onClick={async () => {
+                              try {
+                                await respondConnectionRequest(
+                                  item._id,
+                                  "reject",
+                                );
+                                showToast("Request rejected.", "success");
+                                loadData();
+                              } catch (error) {
+                                showToast(
+                                  error?.message || "Failed to reject.",
+                                  "error",
+                                );
+                              }
+                            }}>
+                            Reject
+                          </Button>
+                          <Button
+                            size="sm"
+                            onClick={async () => {
+                              try {
+                                await respondConnectionRequest(
+                                  item._id,
+                                  "approve",
+                                );
+                                showToast("Request approved.", "success");
+                                loadData();
+                              } catch (error) {
+                                showToast(
+                                  error?.message || "Failed to approve.",
+                                  "error",
+                                );
+                              }
+                            }}>
+                            Approve
+                          </Button>
+                        </>
+                      ) : (
+                        <Button
+                          size="sm"
+                          variant="danger"
+                          onClick={async () => {
+                            try {
+                              await handleCancelRequest(item._id);
+                            } catch {
+                              // handled above
+                            }
+                          }}>
+                          Cancel Request
+                        </Button>
+                      )}
                     </div>
                   </div>
-                ))
-              )}
-            </div>
-          </Card>
-        </section>
+                );
+              })
+            )}
+          </div>
+        </Card>
       </MotionReveal>
     </div>
   );

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import MetricCard from "../components/dashboard/MetricCard";
 import Badge from "../components/ui/Badge";
@@ -18,6 +18,7 @@ import {
 import { fetchOverviewStats } from "../services/statsService";
 import { fetchAppointments } from "../services/appointmentService";
 import { fetchDocuments } from "../services/documentService";
+import { fetchConversations } from "../services/conversationService";
 
 export default function StudentDashboardPage() {
   const { user } = useAuth();
@@ -25,6 +26,10 @@ export default function StudentDashboardPage() {
   const [stats, setStats] = useState(null);
   const [upcomingSessions, setUpcomingSessions] = useState([]);
   const [recentResources, setRecentResources] = useState([]);
+  const [fluctuatingResourceId, setFluctuatingResourceId] = useState(null);
+  const [isResourcesPanelFluctuating, setIsResourcesPanelFluctuating] =
+    useState(false);
+  const fluctuationTimerRef = useRef(null);
 
   const studentName =
     user?.displayName ||
@@ -34,13 +39,18 @@ export default function StudentDashboardPage() {
   useEffect(() => {
     const loadDashboard = async () => {
       try {
-        const [overview, appointments, documents] = await Promise.all([
-          fetchOverviewStats(),
-          fetchAppointments({ limit: 4 }),
-          fetchDocuments({ limit: 3 }),
-        ]);
+        const [overview, appointments, documents, conversations] =
+          await Promise.all([
+            fetchOverviewStats(),
+            fetchAppointments({ limit: 4 }),
+            fetchDocuments({ limit: 3 }),
+            fetchConversations(),
+          ]);
 
-        setStats(overview);
+        setStats({
+          ...overview,
+          messages: Array.isArray(conversations) ? conversations.length : 0,
+        });
 
         const sortedAppointments = [...appointments]
           .filter((item) => new Date(item.scheduledAt) >= new Date())
@@ -57,6 +67,28 @@ export default function StudentDashboardPage() {
 
     loadDashboard();
   }, []);
+
+  useEffect(() => {
+    return () => {
+      if (fluctuationTimerRef.current) {
+        clearTimeout(fluctuationTimerRef.current);
+      }
+    };
+  }, []);
+
+  const handleResourceClick = (resourceId) => {
+    if (fluctuationTimerRef.current) {
+      clearTimeout(fluctuationTimerRef.current);
+    }
+
+    setFluctuatingResourceId(resourceId);
+    setIsResourcesPanelFluctuating(true);
+
+    fluctuationTimerRef.current = setTimeout(() => {
+      setFluctuatingResourceId(null);
+      setIsResourcesPanelFluctuating(false);
+    }, 900);
+  };
 
   const quickActions = [
     {
@@ -148,8 +180,8 @@ export default function StudentDashboardPage() {
             value={String(stats?.documents ?? 0).padStart(2, "0")}
           />
           <MetricCard
-            subtitle="Spend on sessions"
-            title="Messages"
+            subtitle="Your conversation threads"
+            title="Active chats"
             value={String(stats?.messages ?? 0).padStart(2, "0")}
           />
         </section>
@@ -184,7 +216,12 @@ export default function StudentDashboardPage() {
             </div>
           </Card>
 
-          <Card>
+          <Card
+            className={
+              isResourcesPanelFluctuating
+                ? "ring-2 ring-primary/40 transition-all duration-300"
+                : "transition-all duration-300"
+            }>
             <h3>Recent resources</h3>
             <div className="mt-4 space-y-3">
               {recentResources.length === 0 ? (
@@ -193,12 +230,18 @@ export default function StudentDashboardPage() {
                 </p>
               ) : (
                 recentResources.map((resource) => (
-                  <div
+                  <button
+                    type="button"
                     key={resource.id}
-                    className="flex items-center justify-between rounded-card border border-border p-3">
+                    onClick={() => handleResourceClick(resource.id)}
+                    className={`flex w-full items-center justify-between rounded-card border p-3 text-left transition-all duration-300 ${
+                      fluctuatingResourceId === resource.id
+                        ? "animate-pulse border-primary/60 bg-primary/5"
+                        : "border-border hover:border-primary/40"
+                    }`}>
                     <p className="text-small text-gray-700">{resource.title}</p>
                     <Badge variant="success">New</Badge>
-                  </div>
+                  </button>
                 ))
               )}
             </div>

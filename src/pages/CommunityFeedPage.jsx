@@ -14,6 +14,7 @@ import {
   fetchPosts,
   reactToPost,
   removePostReaction,
+  sharePost,
 } from "../services/postService";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -86,34 +87,99 @@ export default function FeedPage({ role }) {
 
   const handleReact = async (postId, reaction) => {
     try {
+      const postIndex = posts.findIndex((p) => p.id === postId);
+      if (postIndex === -1) return;
+
+      const oldPost = posts[postIndex];
+      const oldReaction = oldPost.userReaction;
+
+      // Optimistic update
+      setPosts((prev) =>
+        prev.map((p) =>
+          p.id === postId
+            ? {
+                ...p,
+                userReaction: reaction || null,
+                reactions: reaction
+                  ? {
+                      ...p.reactions,
+                      [reaction]: (p.reactions?.[reaction] || 0) + 1,
+                      ...(oldReaction
+                        ? {
+                            [oldReaction]: Math.max(
+                              0,
+                              (p.reactions?.[oldReaction] || 0) - 1,
+                            ),
+                          }
+                        : {}),
+                    }
+                  : {
+                      ...p.reactions,
+                      [oldReaction]: Math.max(
+                        0,
+                        (p.reactions?.[oldReaction] || 0) - 1,
+                      ),
+                    },
+              }
+            : p,
+        ),
+      );
+
+      // API call in background
+      let updatedPost;
       if (!reaction) {
-        await removePostReaction(postId);
+        const response = await removePostReaction(postId);
+        updatedPost = response;
       } else {
-        await reactToPost(postId, reaction);
+        const response = await reactToPost(postId, reaction);
+        updatedPost = response;
       }
-      loadPosts();
+
+      // Update with actual server data to ensure accuracy
+      if (updatedPost && updatedPost._id) {
+        const postToImport = {
+          id: updatedPost._id || updatedPost.id,
+          content: updatedPost.content || "",
+          mediaUrl: updatedPost.mediaUrl || "",
+          mediaName: updatedPost.mediaName || "",
+          mediaType: updatedPost.mediaType || "",
+          createdAt: updatedPost.createdAt || new Date().toISOString(),
+          author: {
+            id: updatedPost.author?._id || updatedPost.author?.id,
+            name:
+              updatedPost.author?.fullName ||
+              updatedPost.author?.name ||
+              "Unknown",
+            role: updatedPost.author?.role || "student",
+            department: updatedPost.author?.department || "",
+          },
+          reactions: updatedPost.reactionCounts || {},
+          userReaction: updatedPost.userReaction || null,
+          commentsCount: updatedPost.commentsCount || 0,
+          sharedPostId: updatedPost.sharedPostId || null,
+        };
+
+        setPosts((prev) =>
+          prev.map((p) => (p.id === postId ? postToImport : p)),
+        );
+      }
     } catch (error) {
       showToast(error?.message || "Unable to update reaction.", "error");
+      // Revert on error
+      loadPosts();
     }
   };
 
-  const handleComment = async () => {
-    loadPosts();
+  const handleComment = async (postId) => {
+    // Comment count is updated by CommentSection component
+    // No full reload needed
   };
 
   const handleShare = async (postId) => {
-    const post = posts.find((item) => item.id === postId);
-    if (!post) return;
-
     try {
-      await createPost({
-        content: `Shared from ${post.author?.name}: ${post.content}`,
-        mediaUrl: post.mediaUrl || "",
-        mediaName: post.mediaName || "",
-        mediaType: post.mediaType || "",
-      });
+      const sharedPost = await sharePost(postId, "");
+      setPosts((prev) => [sharedPost, ...prev]);
       showToast("Post shared.", "success");
-      loadPosts();
     } catch (error) {
       showToast(error?.message || "Could not share post.", "error");
     }
@@ -161,34 +227,6 @@ export default function FeedPage({ role }) {
             </Card>
           ))}
         </section>
-      </MotionReveal>
-
-      <MotionReveal delay={90} y={16}>
-        <Card className="card-hover-strong border-primary/10 bg-gradient-to-r from-primary/5 via-white to-accent/5">
-          <div className="grid gap-4 lg:grid-cols-[1.4fr_1fr] lg:items-center">
-            <div>
-              <p className="text-small font-semibold uppercase tracking-wide text-primary">
-                Community spotlight
-              </p>
-              <h3 className="mt-2">Keep the feed active and constructive</h3>
-              <p className="mt-2 text-small text-neutral">
-                Posts now live in the backend so everyone sees the same feed,
-                photos, reactions, and comments.
-              </p>
-            </div>
-            <div className="grid gap-2 sm:grid-cols-3 lg:grid-cols-1">
-              {["Ask a question", "Share a resource", "Support a peer"].map(
-                (item) => (
-                  <div
-                    key={item}
-                    className="rounded-card border border-primary/10 bg-white px-3 py-2 text-small font-semibold text-primary transition-transform duration-200 hover:-translate-y-0.5">
-                    {item}
-                  </div>
-                ),
-              )}
-            </div>
-          </div>
-        </Card>
       </MotionReveal>
 
       <MotionReveal delay={130} y={16}>
