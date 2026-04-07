@@ -260,7 +260,7 @@ export default function MessagesPage({ role }) {
       <MotionReveal delay={110} y={18}>
         <div className="grid gap-6 lg:grid-cols-12">
           <div className="lg:col-span-4">
-            <Card className="h-full">
+            <Card className="h-[36rem] min-h-0 flex flex-col">
               <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
                 <h3>Inbox</h3>
                 <Button
@@ -307,7 +307,7 @@ export default function MessagesPage({ role }) {
                   description="Try another search or filter and refresh inbox."
                 />
               ) : (
-                <div className="max-h-[34rem] space-y-2 overflow-y-auto pr-1">
+                <div className="min-h-0 flex-1 space-y-2 overflow-y-auto pr-1">
                   {filteredConversations.map((conversation) => {
                     const otherUser = conversation.participants.find(
                       (participant) => participant.id !== user?.uid,
@@ -322,6 +322,8 @@ export default function MessagesPage({ role }) {
                     const isUnread = Number(conversation.unreadCount || 0) > 0;
                     const previewText =
                       conversation.lastMessage?.trim() || "No message yet";
+                    const isSelected =
+                      selectedConversation?.id === conversation.id;
 
                     return (
                       <button
@@ -329,7 +331,7 @@ export default function MessagesPage({ role }) {
                         type="button"
                         onClick={() => openConversation(conversation)}
                         className={`w-full rounded-card border p-3 text-left transition-all hover:translate-y-[-1px] hover:shadow-soft ${
-                          selectedConversation?.id === conversation.id
+                          isSelected
                             ? "border-primary bg-primary/10"
                             : isUnread
                               ? "border-primary/30 bg-primary/5"
@@ -342,7 +344,12 @@ export default function MessagesPage({ role }) {
                           </div>
                           <div className="min-w-0 flex-1">
                             <div className="flex items-center justify-between gap-2">
-                              <p className="truncate text-sm font-semibold text-slate-800">
+                              <p
+                                className={`truncate text-sm font-semibold ${
+                                  isSelected
+                                    ? "text-primary-dark"
+                                    : "text-slate-800"
+                                }`}>
                                 {otherUser?.name || "Unknown"}
                               </p>
                               <p className="text-[11px] text-neutral/80">
@@ -373,7 +380,7 @@ export default function MessagesPage({ role }) {
             </Card>
           </div>
 
-          <div className="lg:col-span-8">
+          <div className="lg:col-span-8 h-[36rem]">
             {selectedConversation ? (
               <ChatWindow
                 conversation={selectedConversation}
@@ -385,7 +392,7 @@ export default function MessagesPage({ role }) {
                 voiceCallPath={`${roleBasePath}/voice-call`}
               />
             ) : (
-              <Card className="flex min-h-[36rem] items-center justify-center border-dashed border-border bg-gradient-to-br from-white to-slate-50">
+              <Card className="flex h-full items-center justify-center border-dashed border-border bg-gradient-to-br from-white to-slate-50">
                 <div className="max-w-md text-center">
                   <h3>Select a conversation</h3>
                   <p className="mt-2 text-small text-neutral">

@@ -36,7 +36,7 @@ const roleLinks = {
   ],
 };
 
-export default function SidebarNav({ role }) {
+export default function SidebarNav({ role, className = "", onNavigate }) {
   const links = roleLinks[role] ?? [];
   const [unreadCount, setUnreadCount] = useState(0);
 
@@ -52,8 +52,11 @@ export default function SidebarNav({ role }) {
     return () => clearInterval(intervalId);
   }, [role]);
 
+  const baseClassName =
+    "h-full w-[260px] overflow-y-auto bg-primary px-4 py-6 text-white";
+
   return (
-    <aside className="fixed left-0 top-0 z-30 h-screen w-[260px] bg-primary px-4 py-6 text-white overflow-y-auto lg:sticky">
+    <aside className={`${baseClassName} ${className}`.trim()}>
       <h2 className="px-2 text-h3 text-white">MetroBridge</h2>
       <p className="px-2 pt-1 text-small text-slate-300">
         Metropolitan University
@@ -70,7 +73,8 @@ export default function SidebarNav({ role }) {
               }`
             }
             end={link.to === `/${role}`}
-            to={link.to}>
+            to={link.to}
+            onClick={() => onNavigate?.()}>
             <span className="flex items-center justify-between gap-2">
               <span>{link.label}</span>
               {link.label === "Messages" && unreadCount > 0 && (

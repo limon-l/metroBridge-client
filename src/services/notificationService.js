@@ -6,7 +6,7 @@ const normalizeUser = (user) => ({
   role: user?.role || "student",
 });
 
-const normalizeNotification = (notification) => ({
+export const normalizeNotification = (notification) => ({
   id: notification?._id || notification?.id,
   recipient: notification?.recipient?._id || notification?.recipient || null,
   actor: notification?.actor ? normalizeUser(notification.actor) : null,

@@ -6,7 +6,6 @@ import { useAuth } from "../../hooks/useAuth";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faPhone,
-  faPhoneSlash,
   faArrowDown,
   faXmark,
 } from "@fortawesome/free-solid-svg-icons";
@@ -112,14 +111,14 @@ export default function ChatWindow({
   }
 
   const containerClass = isEmbedded
-    ? "flex h-full min-h-[36rem] flex-col overflow-hidden rounded-3xl border border-border bg-white shadow-soft"
+    ? "flex h-full min-h-0 flex-col overflow-hidden rounded-3xl border border-border bg-white shadow-soft"
     : "fixed bottom-0 left-2 right-2 z-40 flex h-[32rem] flex-col rounded-t-2xl rounded-b-none border-t border-l border-r border-border bg-white/95 shadow-2xl backdrop-blur sm:left-auto sm:right-4 sm:w-[26rem]";
 
   return (
     <Card className={containerClass}>
       <div className="flex items-center justify-between border-b border-border bg-gradient-to-r from-slate-900 to-primary p-4 text-white">
         <div className="min-w-0">
-          <p className="truncate font-semibold">{otherUser?.name}</p>
+          <p className="truncate font-semibold text-white">{otherUser?.name}</p>
           <p className="text-xs text-white/80">
             {isEmbedded ? "Conversation open" : "Active now"}
           </p>
@@ -152,7 +151,7 @@ export default function ChatWindow({
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto bg-slate-50/70 p-4 space-y-3">
+      <div className="min-h-0 flex-1 overflow-y-auto bg-slate-50/70 p-4 space-y-3">
         {conversation?.messages?.map((message) => {
           const isOwn = message.senderId === user?.uid;
 
@@ -163,8 +162,8 @@ export default function ChatWindow({
               <div
                 className={`max-w-[78%] px-3 py-2 rounded-2xl shadow-sm ${
                   isOwn
-                    ? "bg-gradient-to-r from-primary to-primary-light text-white rounded-br-sm"
-                    : "bg-white text-text rounded-bl-sm border border-border"
+                    ? "bg-white text-slate-800 rounded-br-sm border border-border"
+                    : "bg-slate-100 text-slate-900 rounded-bl-sm border border-slate-200"
                 }`}>
                 <p className="text-sm break-words">{message.text}</p>
                 {message.mediaUrl ? (
@@ -175,7 +174,7 @@ export default function ChatWindow({
                   />
                 ) : null}
                 <p
-                  className={`text-xs mt-1 ${isOwn ? "text-white/70" : "text-neutral"}`}>
+                  className={`text-xs mt-1 ${isOwn ? "text-slate-500" : "text-slate-500"}`}>
                   {formatTime(message.timestamp)}
                 </p>
               </div>

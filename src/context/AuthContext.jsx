@@ -15,7 +15,6 @@ const AUTH_CACHE_KEY = "metrobridge_auth";
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
-  const [role, setRole] = useState("student");
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -31,8 +30,10 @@ export function AuthProvider({ children }) {
       if (cached) {
         try {
           const parsed = JSON.parse(cached);
-          setUser(parsed.user || null);
-          setRole(parsed.role || "student");
+          const cachedUser = parsed?.user || null;
+          if (cachedUser?.role) {
+            setUser(cachedUser);
+          }
         } catch {
           localStorage.removeItem(AUTH_CACHE_KEY);
         }
@@ -41,40 +42,29 @@ export function AuthProvider({ children }) {
       try {
         const currentUser = await getCurrentUser();
         setUser(currentUser);
-        setRole(currentUser.role || "student");
         connectMessageSocket(token);
         localStorage.setItem(
           AUTH_CACHE_KEY,
           JSON.stringify({
             user: currentUser,
-            role: currentUser.role || "student",
           }),
         );
       } catch {
         localStorage.removeItem(TOKEN_KEY);
         localStorage.removeItem(AUTH_CACHE_KEY);
         setUser(null);
-        setRole("student");
       } finally {
         setLoading(false);
       }
     };
 
     restore();
-
-    return () => {
-      setLoading(false);
-    };
   }, []);
 
   const applyAuthState = ({ token, user: userData }) => {
     localStorage.setItem(TOKEN_KEY, token);
-    localStorage.setItem(
-      AUTH_CACHE_KEY,
-      JSON.stringify({ user: userData, role: userData.role || "student" }),
-    );
+    localStorage.setItem(AUTH_CACHE_KEY, JSON.stringify({ user: userData }));
     setUser(userData);
-    setRole(userData.role || "student");
     connectMessageSocket(token);
   };
 
@@ -95,19 +85,18 @@ export function AuthProvider({ children }) {
     localStorage.removeItem(AUTH_CACHE_KEY);
     disconnectMessageSocket();
     setUser(null);
-    setRole("student");
   };
 
   const value = useMemo(
     () => ({
       user,
-      role,
+      role: user?.role || null,
       loading,
       signup,
       login,
       logout,
     }),
-    [user, role, loading],
+    [user, loading],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

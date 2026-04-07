@@ -2,7 +2,7 @@ import { Navigate } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 
 export default function ProtectedRoute({ children, allowedRoles }) {
-  const { user, role, loading } = useAuth();
+  const { user, loading } = useAuth();
 
   if (loading) {
     return (
@@ -18,10 +18,8 @@ export default function ProtectedRoute({ children, allowedRoles }) {
     return <Navigate replace to="/login" />;
   }
 
-  if (allowedRoles && !allowedRoles.includes(role)) {
-    if (role === "admin") return <Navigate replace to="/admin" />;
-    if (role === "mentor") return <Navigate replace to="/mentor" />;
-    return <Navigate replace to="/student" />;
+  if (allowedRoles && !allowedRoles.includes(user.role)) {
+    return <Navigate replace to="/login" />;
   }
 
   return children;

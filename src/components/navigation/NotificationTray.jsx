@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -15,11 +15,15 @@ import Badge from "../ui/Badge";
 import Button from "../ui/Button";
 import { useAuth } from "../../hooks/useAuth";
 import { useToast } from "../../hooks/useToast";
-import { getMessageSocket } from "../../services/socketClient";
+import {
+  connectMessageSocket,
+  getMessageSocket,
+} from "../../services/socketClient";
 import {
   fetchNotifications,
   markAllNotificationsRead,
   markNotificationRead,
+  normalizeNotification,
 } from "../../services/notificationService";
 
 const typeConfig = {
@@ -93,15 +97,15 @@ export default function NotificationTray() {
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  const visibleNotifications = notifications.slice(0, 5);
+  const visibleNotifications = notifications.slice(0, 8);
 
   const unreadCount =
     meta.unreadCount || notifications.filter((item) => !item.isRead).length;
 
-  const loadNotifications = async () => {
+  const loadNotifications = useCallback(async () => {
     setIsLoading(true);
     try {
-      const response = await fetchNotifications({ limit: 5 });
+      const response = await fetchNotifications({ limit: 8 });
       setNotifications(response.items);
       setMeta(response.meta || {});
     } catch (error) {
@@ -109,22 +113,24 @@ export default function NotificationTray() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [showToast]);
 
   useEffect(() => {
     loadNotifications();
-  }, []);
+  }, [loadNotifications]);
 
   useEffect(() => {
-    const socket = getMessageSocket();
+    const token = localStorage.getItem("metrobridge_token");
+    const socket = getMessageSocket() || connectMessageSocket(token);
     if (!socket) return undefined;
 
-    const handleNotification = (notification) => {
+    const handleNotification = (incomingNotification) => {
+      const notification = normalizeNotification(incomingNotification);
       setNotifications((current) => {
         if (current.some((item) => item.id === notification.id)) {
           return current;
         }
-        return [notification, ...current].slice(0, 5);
+        return [notification, ...current].slice(0, 8);
       });
       setMeta((current) => ({
         ...current,
@@ -132,11 +138,37 @@ export default function NotificationTray() {
       }));
     };
 
+    const handleReconnect = () => {
+      loadNotifications();
+    };
+
     socket.on("notification:new", handleNotification);
+    socket.on("connect", handleReconnect);
+
     return () => {
       socket.off("notification:new", handleNotification);
+      socket.off("connect", handleReconnect);
     };
-  }, []);
+  }, [loadNotifications]);
+
+  useEffect(() => {
+    const pollId = setInterval(() => {
+      loadNotifications();
+    }, 30000);
+
+    const handleVisibility = () => {
+      if (document.visibilityState === "visible") {
+        loadNotifications();
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibility);
+
+    return () => {
+      clearInterval(pollId);
+      document.removeEventListener("visibilitychange", handleVisibility);
+    };
+  }, [loadNotifications]);
 
   useEffect(() => {
     const handleOutsideClick = (event) => {
@@ -215,7 +247,7 @@ export default function NotificationTray() {
       </button>
 
       {isOpen ? (
-        <div className="absolute right-0 mt-3 w-[22rem] overflow-hidden rounded-3xl border border-border bg-white shadow-2xl">
+        <div className="absolute right-0 mt-3 w-[calc(100vw-2rem)] max-w-[22rem] overflow-hidden rounded-3xl border border-border bg-white shadow-2xl sm:w-[22rem] md:w-[24rem] lg:w-[26rem] xl:w-[28rem]">
           <div className="bg-gradient-to-r from-primary via-primary-light to-accent px-4 py-4 text-white">
             <div className="flex items-center justify-between gap-3">
               <div>
@@ -226,13 +258,13 @@ export default function NotificationTray() {
                   {latestNotificationLabel}
                 </h3>
               </div>
-              <Badge className="bg-white/15 text-white">
+              <Badge className="whitespace-nowrap bg-white/15 text-white">
                 {unreadCount} unread
               </Badge>
             </div>
           </div>
 
-          <div className="p-2">
+          <div className="max-h-[70vh] overflow-y-auto p-2 sm:max-h-[30rem]">
             {isLoading ? (
               <div className="flex items-center justify-center gap-2 py-8 text-neutral">
                 <FontAwesomeIcon icon={faSpinner} className="animate-spin" />
