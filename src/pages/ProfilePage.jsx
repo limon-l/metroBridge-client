@@ -27,6 +27,12 @@ export default function ProfilePage() {
     guardianName: "",
     guardianPhone: "",
     bio: "",
+    profilePhoto: "",
+    expertise: [],
+    projects: [],
+    thesis: "",
+    jobDetails: "",
+    educationDetails: "",
   });
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -58,7 +64,8 @@ export default function ProfilePage() {
       try {
         const response = await apiClient.get("/users/me");
         const data = response.data?.data || {};
-        setProfile({
+
+        const profileData = {
           fullName: data.fullName || "",
           universityId: data.universityId || "",
           department: data.department || "",
@@ -78,7 +85,19 @@ export default function ProfilePage() {
           guardianName: data.guardianName || "",
           guardianPhone: data.guardianPhone || "",
           bio: data.bio || "",
-        });
+          profilePhoto: data.profilePhoto || "",
+          expertise: data.expertise || [],
+          projects: data.projects || [],
+          thesis: data.thesis || "",
+          jobDetails: data.jobDetails || "",
+          educationDetails: data.educationDetails || "",
+        };
+
+        setProfile(profileData);
+
+        if (data.profilePhoto) {
+          setPhotoPreview(data.profilePhoto);
+        }
       } catch {
         showToast("Failed to load profile data.", "error");
       } finally {
@@ -89,8 +108,8 @@ export default function ProfilePage() {
     loadProfile();
   }, [showToast, user?.email]);
 
-  const studentName = useMemo(
-    () => profile.fullName || "Student Name",
+  const displayName = useMemo(
+    () => profile.fullName || "User Name",
     [profile.fullName],
   );
 
@@ -100,7 +119,9 @@ export default function ProfilePage() {
 
     const reader = new FileReader();
     reader.onload = () => {
-      setPhotoPreview(reader.result?.toString() || "");
+      const base64 = reader.result?.toString() || "";
+      setPhotoPreview(base64);
+      setProfile((prev) => ({ ...prev, profilePhoto: base64 }));
     };
     reader.readAsDataURL(file);
   };
@@ -113,18 +134,34 @@ export default function ProfilePage() {
       const payload = {
         fullName: profile.fullName,
         department: profile.department,
-        batch: profile.batch,
-        section: profile.section,
-        shift: profile.shift,
-        dateOfBirth: profile.dateOfBirth || null,
-        bloodGroup: profile.bloodGroup,
-        gender: profile.gender,
-        emergencyContactName: profile.emergencyContactName,
-        emergencyContactPhone: profile.emergencyContactPhone,
-        guardianName: profile.guardianName,
-        guardianPhone: profile.guardianPhone,
         bio: profile.bio,
+        projects: profile.projects,
+        thesis: profile.thesis,
+        jobDetails: profile.jobDetails,
+        educationDetails: profile.educationDetails,
       };
+
+      // Add role-specific fields
+      if (user?.role === "student") {
+        payload.batch = profile.batch;
+        payload.section = profile.section;
+        payload.shift = profile.shift;
+        payload.dateOfBirth = profile.dateOfBirth || null;
+        payload.bloodGroup = profile.bloodGroup;
+        payload.gender = profile.gender;
+        payload.emergencyContactName = profile.emergencyContactName;
+        payload.emergencyContactPhone = profile.emergencyContactPhone;
+        payload.guardianName = profile.guardianName;
+        payload.guardianPhone = profile.guardianPhone;
+      } else if (user?.role === "mentor") {
+        payload.expertise = profile.expertise;
+      }
+
+      // Always include profilePhoto if present
+      if (profile.profilePhoto) {
+        payload.profilePhoto = profile.profilePhoto;
+      }
+
       await apiClient.patch("/users/me", payload);
       showToast("Profile updated successfully.");
     } catch (error) {
@@ -149,7 +186,9 @@ export default function ProfilePage() {
           <div>
             <h2>Profile</h2>
             <p className="mt-2">
-              Manage your personal, academic, and emergency details.
+              {user?.role === "mentor"
+                ? "Manage your professional and expertise details."
+                : "Manage your personal, academic, and emergency details."}
             </p>
           </div>
           <Badge variant="success">Verified Account</Badge>
@@ -158,18 +197,22 @@ export default function ProfilePage() {
 
       <div className="grid gap-4 xl:grid-cols-[1.1fr_2fr]">
         <Card>
-          <h3>Student identity</h3>
+          <h3>
+            {user?.role === "mentor"
+              ? "Professional Identity"
+              : "Student Identity"}
+          </h3>
           <div className="mt-4 flex flex-col items-center rounded-card border border-dashed border-border bg-slate-50 p-5 text-center">
             <div className="flex h-28 w-28 items-center justify-center overflow-hidden rounded-full border-4 border-white bg-slate-200 shadow-soft">
               {photoPreview ? (
                 <img
-                  alt="Student profile"
+                  alt="Profile photo"
                   className="h-full w-full object-cover"
                   src={photoPreview}
                 />
               ) : (
                 <span className="text-h3 font-bold text-slate-600">
-                  {studentName
+                  {displayName
                     .split(" ")
                     .slice(0, 2)
                     .map((item) => item?.[0] || "")
@@ -179,8 +222,7 @@ export default function ProfilePage() {
               )}
             </div>
             <p className="mt-3 text-small text-neutral">
-              Photo is currently preview-only. Backend save can be connected
-              later.
+              Upload and save your profile photo.
             </p>
             <label
               className="mt-3 inline-flex cursor-pointer items-center justify-center rounded-card border border-border bg-white px-4 py-2 text-small font-semibold text-primary transition hover:bg-slate-100"
@@ -209,14 +251,12 @@ export default function ProfilePage() {
               maxLength={11}
               onChange={onUniversityIdChange}
               pattern="\\d{3}-\\d{3}-\\d{3}"
-              required
               readOnly
               value={profile.universityId}
             />
             <InputField
               label="Email"
               onChange={onChange("email")}
-              required
               readOnly
               type="email"
               value={profile.email}
@@ -224,179 +264,435 @@ export default function ProfilePage() {
             <InputField
               label="Phone Number"
               onChange={onChange("phone")}
-              required
               readOnly
               value={profile.phone}
             />
-            <InputField
-              label="Date of Birth"
-              onChange={onChange("dateOfBirth")}
-              required
-              type="date"
-              value={profile.dateOfBirth}
-            />
-            <div className="grid gap-3 sm:grid-cols-2">
-              <div className="space-y-2">
-                <label
-                  className="text-small font-medium text-gray-700"
-                  htmlFor="section">
-                  Section
-                </label>
-                <select
-                  className="w-full rounded-card border border-border bg-white px-4 py-3 text-body text-gray-800 outline-none transition focus:border-primary-light focus:ring-2 focus:ring-blue-100"
-                  id="section"
-                  onChange={onChange("section")}
+
+            {user?.role === "student" && (
+              <>
+                <InputField
+                  label="Date of Birth"
+                  onChange={onChange("dateOfBirth")}
                   required
-                  value={profile.section}>
-                  <option value="">Select section</option>
-                  {"ABCDEFGHIJ".split("").map((item) => (
-                    <option key={item} value={item}>
-                      {item}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div className="space-y-2">
-                <label
-                  className="text-small font-medium text-gray-700"
-                  htmlFor="shift">
-                  Shift
-                </label>
-                <select
-                  className="w-full rounded-card border border-border bg-white px-4 py-3 text-body text-gray-800 outline-none transition focus:border-primary-light focus:ring-2 focus:ring-blue-100"
-                  id="shift"
-                  onChange={onChange("shift")}
-                  required
-                  value={profile.shift}>
-                  <option value="">Select shift</option>
-                  <option value="Day">Day</option>
-                  <option value="Evening">Evening</option>
-                </select>
-              </div>
-            </div>
-            <div className="grid gap-3 sm:grid-cols-2">
-              <div className="space-y-2">
-                <label
-                  className="text-small font-medium text-gray-700"
-                  htmlFor="bloodGroup">
-                  Blood Group
-                  <span className="text-accent"> *</span>
-                </label>
-                <select
-                  className="w-full rounded-card border border-border bg-white px-4 py-3 text-body text-gray-800 outline-none transition focus:border-primary-light focus:ring-2 focus:ring-blue-100"
-                  id="bloodGroup"
-                  onChange={onChange("bloodGroup")}
-                  required
-                  value={profile.bloodGroup}>
-                  <option value="">Select blood group</option>
-                  {["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"].map(
-                    (group) => (
-                      <option key={group} value={group}>
-                        {group}
-                      </option>
-                    ),
-                  )}
-                </select>
-              </div>
-              <div className="space-y-2">
-                <label
-                  className="text-small font-medium text-gray-700"
-                  htmlFor="gender">
-                  Gender
-                  <span className="text-accent"> *</span>
-                </label>
-                <select
-                  className="w-full rounded-card border border-border bg-white px-4 py-3 text-body text-gray-800 outline-none transition focus:border-primary-light focus:ring-2 focus:ring-blue-100"
-                  id="gender"
-                  onChange={onChange("gender")}
-                  required
-                  value={profile.gender}>
-                  <option value="">Select gender</option>
-                  <option value="Male">Male</option>
-                  <option value="Female">Female</option>
-                </select>
-              </div>
-            </div>
+                  type="date"
+                  value={profile.dateOfBirth}
+                />
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="space-y-2">
+                    <label
+                      className="text-small font-medium text-gray-700"
+                      htmlFor="section">
+                      Section
+                    </label>
+                    <select
+                      className="w-full rounded-card border border-border bg-white px-4 py-3 text-body text-gray-800 outline-none transition focus:border-primary-light focus:ring-2 focus:ring-blue-100"
+                      id="section"
+                      onChange={onChange("section")}
+                      required
+                      value={profile.section}>
+                      <option value="">Select section</option>
+                      {"ABCDEFGHIJ".split("").map((item) => (
+                        <option key={item} value={item}>
+                          {item}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="space-y-2">
+                    <label
+                      className="text-small font-medium text-gray-700"
+                      htmlFor="shift">
+                      Shift
+                    </label>
+                    <select
+                      className="w-full rounded-card border border-border bg-white px-4 py-3 text-body text-gray-800 outline-none transition focus:border-primary-light focus:ring-2 focus:ring-blue-100"
+                      id="shift"
+                      onChange={onChange("shift")}
+                      required
+                      value={profile.shift}>
+                      <option value="">Select shift</option>
+                      <option value="Day">Day</option>
+                      <option value="Evening">Evening</option>
+                    </select>
+                  </div>
+                </div>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="space-y-2">
+                    <label
+                      className="text-small font-medium text-gray-700"
+                      htmlFor="bloodGroup">
+                      Blood Group
+                      <span className="text-accent"> *</span>
+                    </label>
+                    <select
+                      className="w-full rounded-card border border-border bg-white px-4 py-3 text-body text-gray-800 outline-none transition focus:border-primary-light focus:ring-2 focus:ring-blue-100"
+                      id="bloodGroup"
+                      onChange={onChange("bloodGroup")}
+                      required
+                      value={profile.bloodGroup}>
+                      <option value="">Select blood group</option>
+                      {["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"].map(
+                        (group) => (
+                          <option key={group} value={group}>
+                            {group}
+                          </option>
+                        ),
+                      )}
+                    </select>
+                  </div>
+                  <div className="space-y-2">
+                    <label
+                      className="text-small font-medium text-gray-700"
+                      htmlFor="gender">
+                      Gender
+                      <span className="text-accent"> *</span>
+                    </label>
+                    <select
+                      className="w-full rounded-card border border-border bg-white px-4 py-3 text-body text-gray-800 outline-none transition focus:border-primary-light focus:ring-2 focus:ring-blue-100"
+                      id="gender"
+                      onChange={onChange("gender")}
+                      required
+                      value={profile.gender}>
+                      <option value="">Select gender</option>
+                      <option value="Male">Male</option>
+                      <option value="Female">Female</option>
+                    </select>
+                  </div>
+                </div>
+              </>
+            )}
           </div>
         </Card>
 
         <Card>
-          <h3>Academic and contact details</h3>
-          <div className="mt-4 grid gap-3">
-            <InputField
-              label="Department"
-              onChange={onChange("department")}
-              required
-              value={profile.department}
-            />
-            <InputField
-              label="Batch"
-              onChange={onChange("batch")}
-              required
-              value={profile.batch}
-            />
-            <div className="space-y-2">
-              <label
-                className="text-small font-medium text-gray-700"
-                htmlFor="homeAddress">
-                Home Address
-              </label>
-              <textarea
-                className="min-h-24 w-full rounded-card border border-border bg-white px-4 py-3 text-body text-gray-800 outline-none transition focus:border-primary-light focus:ring-2 focus:ring-blue-100"
-                id="homeAddress"
-                onChange={onChange("homeAddress")}
-                placeholder="Village/Road, Area, District"
-                required
-                readOnly
-                value={profile.homeAddress}
-              />
-            </div>
-            <div className="space-y-2">
-              <label
-                className="text-small font-medium text-gray-700"
-                htmlFor="bio">
-                Short Bio / About
-              </label>
-              <textarea
-                className="min-h-24 w-full rounded-card border border-border bg-white px-4 py-3 text-body text-gray-800 outline-none transition focus:border-primary-light focus:ring-2 focus:ring-blue-100"
-                id="bio"
-                onChange={onChange("bio")}
-                placeholder="Share your interests, goals, or extra details"
-                required
-                value={profile.bio}
-              />
-            </div>
-          </div>
+          {user?.role === "student" ? (
+            <>
+              <h3>Academic and contact details</h3>
+              <div className="mt-4 grid gap-3">
+                <InputField
+                  label="Department"
+                  onChange={onChange("department")}
+                  required
+                  value={profile.department}
+                />
+                <InputField
+                  label="Batch"
+                  onChange={onChange("batch")}
+                  required
+                  value={profile.batch}
+                />
+                <div className="space-y-2">
+                  <label
+                    className="text-small font-medium text-gray-700"
+                    htmlFor="homeAddress">
+                    Home Address
+                  </label>
+                  <textarea
+                    className="min-h-24 w-full rounded-card border border-border bg-white px-4 py-3 text-body text-gray-800 outline-none transition focus:border-primary-light focus:ring-2 focus:ring-blue-100"
+                    id="homeAddress"
+                    onChange={onChange("homeAddress")}
+                    placeholder="Village/Road, Area, District"
+                    required
+                    readOnly
+                    value={profile.homeAddress}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label
+                    className="text-small font-medium text-gray-700"
+                    htmlFor="bio">
+                    Short Bio / About
+                  </label>
+                  <textarea
+                    className="min-h-24 w-full rounded-card border border-border bg-white px-4 py-3 text-body text-gray-800 outline-none transition focus:border-primary-light focus:ring-2 focus:ring-blue-100"
+                    id="bio"
+                    onChange={onChange("bio")}
+                    placeholder="Share your interests, goals, or extra details"
+                    required
+                    value={profile.bio}
+                  />
+                </div>
+                <InputField
+                  label="Thesis/Research Title"
+                  onChange={onChange("thesis")}
+                  placeholder="Your thesis or research topic"
+                  value={profile.thesis}
+                />
+                <div className="space-y-2">
+                  <label
+                    className="text-small font-medium text-gray-700"
+                    htmlFor="projects">
+                    Projects
+                  </label>
+                  <textarea
+                    className="min-h-24 w-full rounded-card border border-border bg-white px-4 py-3 text-body text-gray-800 outline-none transition focus:border-primary-light focus:ring-2 focus:ring-blue-100"
+                    id="projects"
+                    onChange={(e) =>
+                      setProfile((prev) => ({
+                        ...prev,
+                        projects: e.target.value
+                          .split(",")
+                          .map((item) => item.trim())
+                          .filter(Boolean),
+                      }))
+                    }
+                    placeholder="List your key projects separated by commas"
+                    value={profile.projects.join(", ")}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label
+                    className="text-small font-medium text-gray-700"
+                    htmlFor="jobDetails">
+                    Job Details
+                  </label>
+                  <textarea
+                    className="min-h-20 w-full rounded-card border border-border bg-white px-4 py-3 text-body text-gray-800 outline-none transition focus:border-primary-light focus:ring-2 focus:ring-blue-100"
+                    id="jobDetails"
+                    onChange={onChange("jobDetails")}
+                    placeholder="Your current or previous job details"
+                    value={profile.jobDetails}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label
+                    className="text-small font-medium text-gray-700"
+                    htmlFor="educationDetails">
+                    Previous Education Details
+                  </label>
+                  <textarea
+                    className="min-h-20 w-full rounded-card border border-border bg-white px-4 py-3 text-body text-gray-800 outline-none transition focus:border-primary-light focus:ring-2 focus:ring-blue-100"
+                    id="educationDetails"
+                    onChange={onChange("educationDetails")}
+                    placeholder="Your previous education details"
+                    value={profile.educationDetails}
+                  />
+                </div>
+              </div>
 
-          <div className="mt-6 rounded-card border border-border bg-slate-50 p-4">
-            <h3>Emergency contact</h3>
-            <div className="mt-3 grid gap-3 sm:grid-cols-2">
-              <InputField
-                label="Contact Person Name"
-                onChange={onChange("emergencyContactName")}
-                required
-                value={profile.emergencyContactName}
-              />
-              <InputField
-                label="Contact Person Phone"
-                onChange={onChange("emergencyContactPhone")}
-                required
-                value={profile.emergencyContactPhone}
-              />
-              <InputField
-                label="Guardian Name"
-                onChange={onChange("guardianName")}
-                required
-                value={profile.guardianName}
-              />
-              <InputField
-                label="Guardian Phone"
-                onChange={onChange("guardianPhone")}
-                required
-                value={profile.guardianPhone}
-              />
-            </div>
-          </div>
+              <div className="mt-6 rounded-card border border-border bg-slate-50 p-4">
+                <h3>Emergency contact</h3>
+                <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                  <InputField
+                    label="Contact Person Name"
+                    onChange={onChange("emergencyContactName")}
+                    required
+                    value={profile.emergencyContactName}
+                  />
+                  <InputField
+                    label="Contact Person Phone"
+                    onChange={onChange("emergencyContactPhone")}
+                    required
+                    value={profile.emergencyContactPhone}
+                  />
+                  <InputField
+                    label="Guardian Name"
+                    onChange={onChange("guardianName")}
+                    required
+                    value={profile.guardianName}
+                  />
+                  <InputField
+                    label="Guardian Phone"
+                    onChange={onChange("guardianPhone")}
+                    required
+                    value={profile.guardianPhone}
+                  />
+                </div>
+              </div>
+            </>
+          ) : user?.role === "mentor" ? (
+            <>
+              <h3>Professional details and expertise</h3>
+              <div className="mt-4 grid gap-3">
+                <InputField
+                  label="Department"
+                  onChange={onChange("department")}
+                  required
+                  value={profile.department}
+                />
+                <div className="space-y-2">
+                  <label
+                    className="text-small font-medium text-gray-700"
+                    htmlFor="expertise">
+                    Areas of Expertise
+                  </label>
+                  <textarea
+                    className="min-h-24 w-full rounded-card border border-border bg-white px-4 py-3 text-body text-gray-800 outline-none transition focus:border-primary-light focus:ring-2 focus:ring-blue-100"
+                    id="expertise"
+                    onChange={(e) =>
+                      setProfile((prev) => ({
+                        ...prev,
+                        expertise: e.target.value
+                          .split(",")
+                          .map((item) => item.trim())
+                          .filter(Boolean),
+                      }))
+                    }
+                    placeholder="Enter expertise areas separated by commas (e.g., Python, Web Development, AI/ML)"
+                    value={profile.expertise.join(", ")}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label
+                    className="text-small font-medium text-gray-700"
+                    htmlFor="projects">
+                    Projects
+                  </label>
+                  <textarea
+                    className="min-h-24 w-full rounded-card border border-border bg-white px-4 py-3 text-body text-gray-800 outline-none transition focus:border-primary-light focus:ring-2 focus:ring-blue-100"
+                    id="projects"
+                    onChange={(e) =>
+                      setProfile((prev) => ({
+                        ...prev,
+                        projects: e.target.value
+                          .split(",")
+                          .map((item) => item.trim())
+                          .filter(Boolean),
+                      }))
+                    }
+                    placeholder="List your key projects separated by commas"
+                    value={profile.projects.join(", ")}
+                  />
+                </div>
+                <InputField
+                  label="Thesis/Research Title"
+                  onChange={onChange("thesis")}
+                  placeholder="Your thesis or research topic"
+                  value={profile.thesis}
+                />
+              </div>
+
+              <div className="mt-6 rounded-card border border-border bg-slate-50 p-4">
+                <h3>Career and education information</h3>
+                <div className="mt-4 grid gap-3">
+                  <div className="space-y-2">
+                    <label
+                      className="text-small font-medium text-gray-700"
+                      htmlFor="jobDetails">
+                      Current Job/Position
+                    </label>
+                    <textarea
+                      className="min-h-20 w-full rounded-card border border-border bg-white px-4 py-3 text-body text-gray-800 outline-none transition focus:border-primary-light focus:ring-2 focus:ring-blue-100"
+                      id="jobDetails"
+                      onChange={onChange("jobDetails")}
+                      placeholder="Your current job title, company, and responsibilities"
+                      value={profile.jobDetails}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label
+                      className="text-small font-medium text-gray-700"
+                      htmlFor="educationDetails">
+                      Educational Background
+                    </label>
+                    <textarea
+                      className="min-h-20 w-full rounded-card border border-border bg-white px-4 py-3 text-body text-gray-800 outline-none transition focus:border-primary-light focus:ring-2 focus:ring-blue-100"
+                      id="educationDetails"
+                      onChange={onChange("educationDetails")}
+                      placeholder="Your qualifications, degrees, and educational institutions"
+                      value={profile.educationDetails}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label
+                      className="text-small font-medium text-gray-700"
+                      htmlFor="bio">
+                      About Me
+                    </label>
+                    <textarea
+                      className="min-h-24 w-full rounded-card border border-border bg-white px-4 py-3 text-body text-gray-800 outline-none transition focus:border-primary-light focus:ring-2 focus:ring-blue-100"
+                      id="bio"
+                      onChange={onChange("bio")}
+                      placeholder="Tell students about yourself, your teaching approach, and mentoring philosophy"
+                      value={profile.bio}
+                    />
+                  </div>
+                </div>
+              </div>
+            </>
+          ) : (
+            <>
+              <h3>Profile details</h3>
+              <div className="mt-4 grid gap-3">
+                <InputField
+                  label="Department"
+                  onChange={onChange("department")}
+                  required
+                  value={profile.department}
+                />
+                <InputField
+                  label="Thesis/Research Title"
+                  onChange={onChange("thesis")}
+                  placeholder="Your thesis or research topic"
+                  value={profile.thesis}
+                />
+                <div className="space-y-2">
+                  <label
+                    className="text-small font-medium text-gray-700"
+                    htmlFor="projects">
+                    Projects
+                  </label>
+                  <textarea
+                    className="min-h-24 w-full rounded-card border border-border bg-white px-4 py-3 text-body text-gray-800 outline-none transition focus:border-primary-light focus:ring-2 focus:ring-blue-100"
+                    id="projects"
+                    onChange={(e) =>
+                      setProfile((prev) => ({
+                        ...prev,
+                        projects: e.target.value
+                          .split(",")
+                          .map((item) => item.trim())
+                          .filter(Boolean),
+                      }))
+                    }
+                    placeholder="List your key projects separated by commas"
+                    value={profile.projects.join(", ")}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label
+                    className="text-small font-medium text-gray-700"
+                    htmlFor="jobDetails">
+                    Job Details
+                  </label>
+                  <textarea
+                    className="min-h-20 w-full rounded-card border border-border bg-white px-4 py-3 text-body text-gray-800 outline-none transition focus:border-primary-light focus:ring-2 focus:ring-blue-100"
+                    id="jobDetails"
+                    onChange={onChange("jobDetails")}
+                    placeholder="Your current or previous job details"
+                    value={profile.jobDetails}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label
+                    className="text-small font-medium text-gray-700"
+                    htmlFor="educationDetails">
+                    Previous Education Details
+                  </label>
+                  <textarea
+                    className="min-h-20 w-full rounded-card border border-border bg-white px-4 py-3 text-body text-gray-800 outline-none transition focus:border-primary-light focus:ring-2 focus:ring-blue-100"
+                    id="educationDetails"
+                    onChange={onChange("educationDetails")}
+                    placeholder="Your previous education details"
+                    value={profile.educationDetails}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label
+                    className="text-small font-medium text-gray-700"
+                    htmlFor="bio">
+                    Short Bio / About
+                  </label>
+                  <textarea
+                    className="min-h-24 w-full rounded-card border border-border bg-white px-4 py-3 text-body text-gray-800 outline-none transition focus:border-primary-light focus:ring-2 focus:ring-blue-100"
+                    id="bio"
+                    onChange={onChange("bio")}
+                    placeholder="Share your interests, goals, or extra details"
+                    value={profile.bio}
+                  />
+                </div>
+              </div>
+            </>
+          )}
         </Card>
       </div>
 
@@ -404,22 +700,24 @@ export default function ProfilePage() {
         <Card>
           <h3>Profile completion</h3>
           <p className="mt-3 text-small text-neutral">
-            Complete all fields to keep your student profile updated for mentors
-            and administration.
+            {user?.role === "mentor"
+              ? "Complete all fields to keep your mentor profile updated for students and administration."
+              : "Complete all fields to keep your student profile updated for mentors and administration."}
           </p>
         </Card>
         <Card>
           <h3>Photo and documents</h3>
           <p className="mt-3 text-small text-neutral">
-            Profile photo is shown instantly in UI. Backend persistence can be
-            integrated in the next phase.
+            Profile photo is saved to your account and displayed across the
+            platform.
           </p>
         </Card>
         <Card>
           <h3>Privacy note</h3>
           <p className="mt-3 text-small text-neutral">
-            Sensitive data like blood group and emergency contacts should be
-            visible only to authorized roles.
+            {user?.role === "mentor"
+              ? "Your professional details are visible to students and authorized administrators."
+              : "Sensitive data like blood group and emergency contacts should be visible only to authorized roles."}
           </p>
         </Card>
       </div>
