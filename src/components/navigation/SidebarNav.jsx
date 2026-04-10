@@ -13,6 +13,7 @@ const roleLinks = {
     { label: "Booking", to: "/student/booking" },
     { label: "Video Call", to: "/student/video-call" },
     { label: "Course Library", to: "/student/library" },
+    { label: "Virtual Classroom", to: "/student/classroom" },
     { label: "Profile", to: "/student/profile" },
   ],
   mentor: [
@@ -22,6 +23,7 @@ const roleLinks = {
     { label: "Messages", to: "/mentor/messages" },
     { label: "Appointments", to: "/mentor/appointments" },
     { label: "Documents", to: "/mentor/documents" },
+    { label: "Virtual Classroom", to: "/mentor/classroom" },
     { label: "Profile", to: "/mentor/profile" },
   ],
   admin: [

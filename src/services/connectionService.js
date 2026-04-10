@@ -57,3 +57,21 @@ export async function reportMember(memberId, reason) {
   );
   return response.data;
 }
+
+export async function fetchModerationReports(filters = {}) {
+  const response = await apiClient.get("/connections/reports", {
+    params: filters,
+  });
+  return {
+    reports: response.data?.data || [],
+    meta: response.data?.meta || {},
+  };
+}
+
+export async function reviewModerationReport(reportId, payload) {
+  const response = await apiClient.patch(
+    `/connections/reports/${reportId}/review`,
+    payload,
+  );
+  return response.data?.data;
+}

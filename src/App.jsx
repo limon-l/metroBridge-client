@@ -34,6 +34,8 @@ import StudentSignupPage from "./pages/StudentSignupPage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
 import VideoCallPage from "./pages/VideoCallPage";
 import VoiceCallPage from "./pages/VoiceCallPage";
+import VirtualClassroomPage from "./pages/VirtualClassroomPage";
+import ClassroomDetailPage from "./pages/ClassroomDetailPage";
 
 function App() {
   return (
@@ -92,6 +94,11 @@ function App() {
             <Route path="video-call" element={<VideoCallPage />} />
             <Route path="library" element={<CourseLibraryPage />} />
             <Route path="library/:courseId" element={<CourseDetailPage />} />
+            <Route path="classroom" element={<VirtualClassroomPage />} />
+            <Route
+              path="classroom/:classroomId"
+              element={<ClassroomDetailPage />}
+            />
             <Route path="profile" element={<ProfilePage />} />
             <Route path="moderation" element={<ModerationPage />} />
           </Route>
@@ -119,6 +126,11 @@ function App() {
             <Route
               path="documents"
               element={<DocumentLibraryPage role="mentor" />}
+            />
+            <Route path="classroom" element={<VirtualClassroomPage />} />
+            <Route
+              path="classroom/:classroomId"
+              element={<ClassroomDetailPage />}
             />
             <Route path="video-call" element={<VideoCallPage />} />
             <Route path="profile" element={<ProfilePage />} />
@@ -148,6 +160,11 @@ function App() {
             <Route
               path="documents"
               element={<DocumentLibraryPage role="admin" />}
+            />
+            <Route path="classroom" element={<VirtualClassroomPage />} />
+            <Route
+              path="classroom/:classroomId"
+              element={<ClassroomDetailPage />}
             />
             <Route path="video-call" element={<VideoCallPage />} />
             <Route path="moderation" element={<ModerationPage />} />

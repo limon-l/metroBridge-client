@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { useLocation } from "react-router-dom";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import Card from "../components/ui/Card";
 import Button from "../components/ui/Button";
 import ChatWindow from "../components/messaging/ChatWindow";
@@ -15,7 +15,9 @@ import {
 
 export default function MessagesPage({ role }) {
   const location = useLocation();
+  const navigate = useNavigate();
   const { user } = useAuth();
+  const autoOpenedConversationRef = useRef(null);
   const currentRole = role || "student";
   const roleBasePath =
     currentRole === "mentor"
@@ -48,13 +50,21 @@ export default function MessagesPage({ role }) {
 
   useEffect(() => {
     const openConversationId = location.state?.openConversationId;
-    if (!openConversationId || conversations.length === 0) return;
+    if (!openConversationId || conversations.length === 0) {
+      return;
+    }
+
+    if (autoOpenedConversationRef.current === openConversationId) {
+      return;
+    }
 
     const match = conversations.find((item) => item.id === openConversationId);
     if (match) {
+      autoOpenedConversationRef.current = openConversationId;
       openConversation(match);
+      navigate(location.pathname, { replace: true, state: {} });
     }
-  }, [conversations, location.state]);
+  }, [conversations, location.pathname, location.state, navigate]);
 
   const filteredConversations = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
