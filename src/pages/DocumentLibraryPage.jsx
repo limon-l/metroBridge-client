@@ -38,25 +38,22 @@ export default function DocumentLibraryPage({ role }) {
   const [uploadMode, setUploadMode] = useState("file");
   const [uploadPreview, setUploadPreview] = useState("");
 
-  const loadDocuments = useCallback(async () => {
+  const loadDocuments = useCallback(async ({ forceRefresh = false } = {}) => {
     setIsLoading(true);
     try {
       const params = {};
       if (selectedCategory !== "all") {
         params.category = selectedCategory;
       }
-      if (searchTerm.trim()) {
-        params.q = searchTerm.trim();
-      }
 
-      const items = await fetchDocuments(params);
+      const items = await fetchDocuments(params, { forceRefresh });
       setDocuments(items);
     } catch {
       setDocuments([]);
     } finally {
       setIsLoading(false);
     }
-  }, [searchTerm, selectedCategory]);
+  }, [selectedCategory]);
 
   useEffect(() => {
     loadDocuments();
@@ -65,7 +62,11 @@ export default function DocumentLibraryPage({ role }) {
   const filteredDocuments = useMemo(() => {
     if (!searchTerm.trim()) return documents;
     return documents.filter((doc) =>
-      doc.title.toLowerCase().includes(searchTerm.toLowerCase()),
+      [doc.title, doc.description, doc.subject, doc.fileName]
+        .filter(Boolean)
+        .some((value) =>
+          value.toLowerCase().includes(searchTerm.toLowerCase()),
+        ),
     );
   }, [documents, searchTerm]);
 
@@ -164,7 +165,7 @@ export default function DocumentLibraryPage({ role }) {
             className="flex-1 rounded-lg border border-border px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
           />
           <div className="flex gap-2">
-            <Button variant="secondary" onClick={loadDocuments}>
+            <Button variant="secondary" onClick={() => loadDocuments({ forceRefresh: true })}>
               Refresh
             </Button>
             {role === "mentor" && (

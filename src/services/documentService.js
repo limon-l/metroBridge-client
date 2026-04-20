@@ -1,5 +1,8 @@
 import apiClient from "./apiClient";
 
+const DOCUMENT_CACHE_PREFIX = "metrobridge_documents_cache";
+const DOCUMENT_CACHE_TTL_MS = 3 * 60 * 1000;
+
 const normalizeDocument = (doc) => ({
   id: doc?._id || doc?.id,
   title: doc?.title || "",
@@ -18,9 +21,75 @@ const normalizeDocument = (doc) => ({
   uploadedAt: doc?.createdAt || doc?.uploadedAt || new Date().toISOString(),
 });
 
-export async function fetchDocuments(params = {}) {
+const getCacheKey = (params = {}) =>
+  JSON.stringify(
+    Object.entries(params)
+      .filter(([, value]) => value !== undefined && value !== null && value !== "")
+      .sort(([left], [right]) => left.localeCompare(right)),
+  );
+
+const readCachedDocuments = (cacheKey) => {
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  try {
+    const raw = window.sessionStorage.getItem(
+      `${DOCUMENT_CACHE_PREFIX}:${cacheKey}`,
+    );
+    if (!raw) {
+      return null;
+    }
+
+    const parsed = JSON.parse(raw);
+    if (!parsed?.timestamp || !Array.isArray(parsed?.documents)) {
+      return null;
+    }
+
+    if (Date.now() - parsed.timestamp > DOCUMENT_CACHE_TTL_MS) {
+      return null;
+    }
+
+    return parsed.documents;
+  } catch {
+    return null;
+  }
+};
+
+const writeCachedDocuments = (cacheKey, documents) => {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  try {
+    window.sessionStorage.setItem(
+      `${DOCUMENT_CACHE_PREFIX}:${cacheKey}`,
+      JSON.stringify({
+        timestamp: Date.now(),
+        documents,
+      }),
+    );
+  } catch {
+    // Ignore cache write failures.
+  }
+};
+
+export async function fetchDocuments(params = {}, options = {}) {
+  const cacheKey = getCacheKey(params);
+
+  if (!options.forceRefresh) {
+    const cachedDocuments = readCachedDocuments(cacheKey);
+    if (cachedDocuments) {
+      return cachedDocuments;
+    }
+  }
+
   const response = await apiClient.get("/documents", { params });
-  return (response.data?.data || []).map(normalizeDocument);
+  const documents = (response.data?.data || []).map(normalizeDocument);
+
+  writeCachedDocuments(cacheKey, documents);
+
+  return documents;
 }
 
 export async function uploadDocument(payload) {
